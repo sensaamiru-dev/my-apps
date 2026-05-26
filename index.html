@@ -49,7 +49,6 @@ tailwind.config = {
     transition: background 0.4s, color 0.3s;
   }
 
-  /* NOISE TEXTURE */
   body::before {
     content: '';
     position: fixed;
@@ -72,7 +71,6 @@ tailwind.config = {
     box-shadow: 0 1px 6px rgba(22,163,74,0.06), 0 4px 20px rgba(0,0,0,0.03);
   }
 
-  /* ---- APP CARD ---- */
   .app-card {
     transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
     position: relative;
@@ -93,7 +91,6 @@ tailwind.config = {
   .icon-wrap { transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); }
   .app-card:hover .icon-wrap { transform: scale(1.12) rotate(3deg); }
 
-  /* ---- SIDEBAR ---- */
   #notes-sidebar {
     width: 280px;
     transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
@@ -101,14 +98,12 @@ tailwind.config = {
   }
   #notes-sidebar.open { transform: translateX(0); }
 
-  /* ---- ADMIN PANEL ---- */
   #admin-panel {
     transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
     transform: translateX(100%);
   }
   #admin-panel.open { transform: translateX(0); }
 
-  /* ---- SECTION ---- */
   .section-header {
     position: relative;
     display: flex;
@@ -122,14 +117,12 @@ tailwind.config = {
     background: linear-gradient(90deg, var(--border-strong), transparent);
   }
 
-  /* ---- LOGIN ---- */
   .login-bg {
     background: radial-gradient(ellipse at 30% 40%, rgba(134,239,172,0.25) 0%, transparent 55%),
                 radial-gradient(ellipse at 70% 70%, rgba(22,163,74,0.15) 0%, transparent 50%),
                 var(--bg);
   }
 
-  /* ---- GRADIENT TEXT ---- */
   .grad-text {
     background: linear-gradient(135deg, #15803d 0%, #22c55e 60%, #86efac 100%);
     -webkit-background-clip: text;
@@ -137,7 +130,6 @@ tailwind.config = {
     background-clip: text;
   }
 
-  /* ---- ANIMATIONS ---- */
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(16px); }
     to { opacity: 1; transform: translateY(0); }
@@ -152,7 +144,6 @@ tailwind.config = {
   .toast-in { animation: toastIn 0.35s cubic-bezier(0.4,0,0.2,1) forwards; }
   .toast-out { animation: toastOut 0.28s ease-in forwards; }
 
-  /* ---- INPUTS ---- */
   .inp {
     width: 100%;
     background: var(--surface2);
@@ -170,21 +161,16 @@ tailwind.config = {
 
   textarea.inp { resize: vertical; min-height: 80px; }
 
-  /* ---- BADGE ---- */
   .badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
 
-  /* ---- COLOR BUTTONS ---- */
   .color-btn { transition: all 0.2s; }
   .color-btn.selected { ring: 2px; outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  /* ---- SNIPPET CARD ---- */
   .snippet-card { transition: all 0.2s; }
   .snippet-card:hover { border-color: var(--accent); }
 
-  /* ---- NOTE EDITOR ---- */
   #note-editor { font-family: 'DM Mono', monospace; font-size: 12.5px; }
 
-  /* ---- MOST VISITED BADGE ---- */
   .visits-badge {
     position: absolute;
     top: 7px; right: 7px;
@@ -200,7 +186,6 @@ tailwind.config = {
   .app-card:hover .visits-badge { opacity: 1; }
   .app-card.has-visits .visits-badge { opacity: 0.7; }
 
-  /* ---- BTN ---- */
   .btn-primary {
     background: linear-gradient(135deg, #15803d 0%, #22c55e 100%);
     color: white;
@@ -227,7 +212,6 @@ tailwind.config = {
   }
   .btn-secondary:hover { border-color: var(--accent); }
 
-  /* ---- OVERLAY ---- */
   .overlay {
     position: fixed; inset: 0;
     background: rgba(5,46,22,0.25);
@@ -239,15 +223,12 @@ tailwind.config = {
   }
   .overlay.show { opacity: 1; pointer-events: all; }
 
-  /* ---- SECTION COLLAPSE ---- */
   .section-body { transition: all 0.35s ease; overflow: hidden; }
   .chevron { transition: transform 0.3s; }
   .collapsed .chevron { transform: rotate(-90deg); }
 
-  /* search highlight */
   mark { background: rgba(34,197,94,0.25); border-radius: 2px; }
 
-  /* ---- RECENT STRIP ---- */
   .recent-pill {
     display: inline-flex; align-items: center; gap: 6px;
     background: var(--surface); border: 1px solid var(--border);
@@ -258,7 +239,6 @@ tailwind.config = {
   }
   .recent-pill:hover { border-color: var(--accent); background: var(--accent-light); transform: translateY(-1px); }
 
-  /* password input theming */
   #password-input {
     background: var(--surface2);
     border: 1px solid var(--border);
@@ -271,6 +251,16 @@ tailwind.config = {
     transition: all 0.2s;
   }
   #password-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+  /* Sync status indicator */
+  .sync-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    display: inline-block; margin-right: 4px;
+  }
+  .sync-dot.online { background: #22c55e; box-shadow: 0 0 4px #22c55e; }
+  .sync-dot.offline { background: #ef4444; }
+  .sync-dot.syncing { background: #f59e0b; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 </style>
 <base target="_blank">
 </head>
@@ -322,6 +312,14 @@ tailwind.config = {
         </div>
 
         <div class="flex items-center gap-2">
+          <!-- Sync Status -->
+          <div id="sync-status" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold" style="background: var(--surface2); border: 1px solid var(--border); color: var(--muted)">
+            <span class="sync-dot offline" id="sync-dot"></span>
+            <span id="sync-text">Offline</span>
+          </div>
+          <button onclick="syncNow()" title="Sync Now" class="p-2.5 rounded-xl transition-all hover:scale-105" style="background: var(--surface2); border: 1px solid var(--border); color: var(--accent)">
+            <i data-lucide="refresh-cw" class="w-4 h-4" id="sync-icon"></i>
+          </button>
           <button onclick="toggleNotes()" id="notes-btn" title="Notes & Clips"
             class="p-2.5 rounded-xl transition-all hover:scale-105" style="background: var(--surface2); border: 1px solid var(--border); color: var(--accent)">
             <i data-lucide="notebook-pen" class="w-4 h-4"></i>
@@ -372,7 +370,7 @@ tailwind.config = {
     </main>
 
     <footer class="text-center py-5 text-xs" style="color: var(--muted); border-top: 1px solid var(--border)">
-      Personal Hub &bull; Built with care
+      Personal Hub &bull; Cloud Sync Enabled
     </footer>
   </div>
 
@@ -424,6 +422,23 @@ tailwind.config = {
 
   <div class="p-5 space-y-6">
 
+    <!-- Sync Controls -->
+    <div class="p-4 rounded-xl" style="background: var(--surface2); border: 1px solid var(--border)">
+      <div class="flex items-center gap-2 mb-3">
+        <div class="w-1 h-4 rounded-full" style="background: var(--accent)"></div>
+        <h3 class="text-sm font-bold" style="color: var(--text)">Cloud Sync</h3>
+      </div>
+      <p class="text-xs mb-3" style="color: var(--muted)">Sync your data across all devices via Supabase.</p>
+      <div class="flex gap-2">
+        <button onclick="syncNow()" class="btn-primary flex-1 text-xs">
+          <span id="sync-btn-text">Sync Now</span>
+        </button>
+        <button onclick="forcePush()" class="btn-secondary text-xs" title="Overwrite cloud with local">Push ↑</button>
+        <button onclick="forcePull()" class="btn-secondary text-xs" title="Overwrite local with cloud">Pull ↓</button>
+      </div>
+      <div id="last-sync" class="text-[10px] mt-2" style="color: var(--muted)">Never synced</div>
+    </div>
+
     <!-- SECTION MANAGER -->
     <div>
       <p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color: var(--muted)">Sections / Groups</p>
@@ -467,9 +482,7 @@ tailwind.config = {
         </div>
         <div>
           <label class="text-[10px] font-bold uppercase tracking-wider block mb-1.5" style="color: var(--muted)">Color</label>
-          <div class="grid grid-cols-6 gap-1.5" id="color-picker">
-            <!-- Rendered by JS -->
-          </div>
+          <div class="grid grid-cols-6 gap-1.5" id="color-picker"></div>
           <input type="hidden" id="app-color" value="green">
         </div>
         <div class="flex gap-2 pt-1">
@@ -488,12 +501,26 @@ tailwind.config = {
       <div id="admin-apps-list" class="space-y-1.5"></div>
     </div>
 
+    <!-- Local Backup -->
+    <div>
+      <p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color: var(--muted)">Local Backup</p>
+      <div class="flex gap-2">
+        <button onclick="exportData()" class="btn-secondary text-xs flex-1">Export JSON</button>
+        <button onclick="importData()" class="btn-secondary text-xs flex-1">Import JSON</button>
+      </div>
+      <input type="file" id="import-file" accept=".json" class="hidden" onchange="handleImport(event)">
+    </div>
+
   </div>
 </div>
 
 <script>
 // ========== CONFIG ==========
 const PASSWORD_HASH = "ff34b971e4ff1a9e0132f289826bcedd57c67b0fe1409d4365e3b1b1d0bc8d31";
+
+// 🔴 REPLACE THIS WITH YOUR SUPABASE ANON KEY
+const SUPABASE_URL = 'https://lkpxnsekribpugfsuiba.supabase.co';
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
 
 const COLORS = {
   green:   { dot: '#22c55e', bg: 'rgba(34,197,94,0.1)',  text: '#15803d', border: 'rgba(34,197,94,0.25)' },
@@ -513,6 +540,8 @@ let sections = [];
 let visits = {};
 let snippets = [];
 let noteTimeout = null;
+let isOnline = false;
+let isSyncing = false;
 
 const defaultSections = ['Work', 'Personal', 'Tools'];
 const defaultApps = [
@@ -526,6 +555,27 @@ const defaultApps = [
   { id: '8', name: 'Notion',        url: 'https://notion.so',             icon: 'file-text',   color: 'slate',   section: 'Tools'    },
 ];
 
+// ========== SUPABASE API ==========
+async function sbFetch(table, method = 'GET', body = null) {
+  const opts = {
+    method,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'return=representation' : 'return=representation'
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, opts);
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  return res.status === 204 ? null : await res.json();
+}
+
 // ========== INIT ==========
 document.addEventListener('DOMContentLoaded', () => {
   initData();
@@ -534,9 +584,13 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(updateClock, 1000);
   if (sessionStorage.getItem('lp_auth') === 'true') unlockDashboard();
   lucide.createIcons();
+  
+  // Auto-sync every 30 seconds if online
+  setInterval(() => { if (isOnline && !isSyncing) syncNow(); }, 30000);
 });
 
 function initData() {
+  // Try to load from localStorage first (for offline), then sync from cloud
   apps     = JSON.parse(localStorage.getItem('lp_apps')     || 'null') || [...defaultApps];
   sections = JSON.parse(localStorage.getItem('lp_sections') || 'null') || [...defaultSections];
   visits   = JSON.parse(localStorage.getItem('lp_visits')   || '{}');
@@ -546,13 +600,166 @@ function initData() {
     const el = document.getElementById('note-editor');
     if (el) el.value = savedNote;
   }, 100);
+  
+  // Try initial sync from cloud
+  if (SUPABASE_KEY !== 'YOUR_SUPABASE_ANON_KEY_HERE') {
+    syncNow();
+  } else {
+    updateSyncStatus('offline', 'No API Key');
+  }
 }
 
-function save() {
+function saveLocal() {
   localStorage.setItem('lp_apps',     JSON.stringify(apps));
   localStorage.setItem('lp_sections', JSON.stringify(sections));
   localStorage.setItem('lp_visits',   JSON.stringify(visits));
   localStorage.setItem('lp_snippets', JSON.stringify(snippets));
+}
+
+// ========== SYNC ==========
+async function syncNow() {
+  if (SUPABASE_KEY === 'YOUR_SUPABASE_ANON_KEY_HERE') {
+    showToast('Please set your Supabase API key first', 'error');
+    return;
+  }
+  
+  isSyncing = true;
+  updateSyncStatus('syncing', 'Syncing...');
+  
+  try {
+    // Pull from cloud
+    const [cloudApps, cloudSections, cloudSnippets] = await Promise.all([
+      sbFetch('apps?select=*'),
+      sbFetch('sections?select=*&order=sort_order'),
+      sbFetch('snippets?select=*&order=created_at.desc')
+    ]);
+    
+    // Convert cloud data to local format
+    const cloudAppsMap = {};
+    cloudApps.forEach(a => {
+      cloudAppsMap[a.id] = a;
+      visits[a.id] = { count: a.visit_count || 0, last: a.last_visit || 0 };
+    });
+    
+    // Merge: cloud wins for apps/sections/snippets
+    if (cloudApps.length > 0) {
+      apps = cloudApps.map(a => ({
+        id: a.id, name: a.name, url: a.url, icon: a.icon, 
+        color: a.color, section: a.section || ''
+      }));
+    } else if (apps.length > 0) {
+      // Push local apps to cloud if cloud is empty
+      await pushAppsToCloud();
+    }
+    
+    if (cloudSections.length > 0) {
+      sections = cloudSections.map(s => s.name);
+    } else if (sections.length > 0) {
+      await pushSectionsToCloud();
+    }
+    
+    if (cloudSnippets.length > 0) {
+      snippets = cloudSnippets.map(s => ({ id: s.id, text: s.text, created: new Date(s.created_at).getTime() }));
+    }
+    
+    saveLocal();
+    renderAll();
+    isOnline = true;
+    updateSyncStatus('online', 'Synced');
+    document.getElementById('last-sync').textContent = 'Last sync: ' + new Date().toLocaleTimeString();
+    showToast('Synced with cloud', 'success');
+    
+  } catch (err) {
+    console.error('Sync error:', err);
+    isOnline = false;
+    updateSyncStatus('offline', 'Sync failed');
+    showToast('Sync failed - working offline', 'error');
+  } finally {
+    isSyncing = false;
+  }
+}
+
+async function pushAppsToCloud() {
+  for (const app of apps) {
+    const v = visits[app.id] || { count: 0, last: 0 };
+    await sbFetch('apps', 'POST', {
+      id: app.id,
+      name: app.name,
+      url: app.url,
+      icon: app.icon,
+      color: app.color,
+      section: app.section || '',
+      visit_count: v.count,
+      last_visit: v.last
+    }).catch(() => {
+      // If exists, try upsert
+      return sbFetch(`apps?id=eq.${app.id}`, 'PATCH', {
+        name: app.name, url: app.url, icon: app.icon,
+        color: app.color, section: app.section || '',
+        visit_count: v.count, last_visit: v.last
+      });
+    });
+  }
+}
+
+async function pushSectionsToCloud() {
+  for (let i = 0; i < sections.length; i++) {
+    await sbFetch('sections', 'POST', { name: sections[i], sort_order: i })
+      .catch(() => sbFetch(`sections?name=eq.${encodeURIComponent(sections[i])}`, 'PATCH', { sort_order: i }));
+  }
+}
+
+async function pushSnippetsToCloud() {
+  for (const s of snippets) {
+    await sbFetch('snippets', 'POST', { id: s.id, text: s.text })
+      .catch(() => sbFetch(`snippets?id=eq.${s.id}`, 'PATCH', { text: s.text }));
+  }
+}
+
+async function forcePush() {
+  if (!confirm('This will overwrite all cloud data with your local data. Continue?')) return;
+  isSyncing = true;
+  updateSyncStatus('syncing', 'Pushing...');
+  try {
+    // Clear cloud first (delete all)
+    await sbFetch('apps?id=not.is.null', 'DELETE');
+    await sbFetch('sections?id=not.is.null', 'DELETE');
+    await sbFetch('snippets?id=not.is.null', 'DELETE');
+    
+    await pushAppsToCloud();
+    await pushSectionsToCloud();
+    await pushSnippetsToCloud();
+    
+    saveLocal();
+    renderAll();
+    updateSyncStatus('online', 'Pushed');
+    showToast('Local data pushed to cloud', 'success');
+  } catch (err) {
+    updateSyncStatus('offline', 'Push failed');
+    showToast('Push failed', 'error');
+  } finally {
+    isSyncing = false;
+  }
+}
+
+async function forcePull() {
+  if (!confirm('This will overwrite your local data with cloud data. Continue?')) return;
+  await syncNow();
+}
+
+function updateSyncStatus(status, text) {
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-text');
+  const icon = document.getElementById('sync-icon');
+  
+  dot.className = `sync-dot ${status}`;
+  txt.textContent = text;
+  
+  if (status === 'syncing') {
+    icon.classList.add('animate-spin');
+  } else {
+    icon.classList.remove('animate-spin');
+  }
 }
 
 // ========== AUTH ==========
@@ -661,7 +868,6 @@ function renderApps(query = '') {
   container.classList.remove('hidden');
   emptyState.classList.add('hidden');
 
-  // Group by section
   const groups = {};
   const sectionOrder = [...sections, '__none__'];
   filtered.forEach(app => {
@@ -740,11 +946,22 @@ function filterApps(isMobile = false) {
 }
 
 // ========== VISIT TRACKING ==========
-function trackVisit(id) {
+async function trackVisit(id) {
   if (!visits[id]) visits[id] = { count: 0, last: 0 };
   visits[id].count++;
   visits[id].last = Date.now();
-  save();
+  saveLocal();
+  
+  // Sync visit to cloud
+  if (isOnline && SUPABASE_KEY !== 'YOUR_SUPABASE_ANON_KEY_HERE') {
+    try {
+      await sbFetch(`apps?id=eq.${id}`, 'PATCH', {
+        visit_count: visits[id].count,
+        last_visit: visits[id].last
+      });
+    } catch(e) { /* silent fail */ }
+  }
+  
   setTimeout(() => { renderRecent(); lucide.createIcons(); }, 300);
 }
 
@@ -753,11 +970,8 @@ function fixBrokenIcons() {
   setTimeout(() => {
     document.querySelectorAll('i[data-icon-name]').forEach(el => {
       const svgParent = el.closest('.icon-wrap') || el.parentElement;
-      // If lucide didn't render an svg inside, it'll still be an <i>
-      // Check if the svg was injected
       const svg = svgParent.querySelector('svg');
       if (!svg) {
-        // Try to render as favicon
         const url = el.dataset.appUrl;
         if (url) {
           try {
@@ -778,12 +992,19 @@ function fixBrokenIcons() {
 }
 
 // ========== SECTIONS ADMIN ==========
-function addSection() {
+async function addSection() {
   const inp = document.getElementById('new-section-name');
   const name = inp.value.trim();
   if (!name || sections.includes(name)) { showToast('Section already exists or empty', 'error'); return; }
   sections.push(name);
-  save();
+  saveLocal();
+  
+  if (isOnline) {
+    try {
+      await sbFetch('sections', 'POST', { name, sort_order: sections.length - 1 });
+    } catch(e) { /* may already exist */ }
+  }
+  
   inp.value = '';
   renderSectionsAdmin();
   populateSectionSelect();
@@ -791,11 +1012,23 @@ function addSection() {
   showToast(`Section "${name}" created`, 'success');
 }
 
-function deleteSection(name) {
+async function deleteSection(name) {
   if (!confirm(`Delete section "${name}"? Apps in it will move to Other.`)) return;
   sections = sections.filter(s => s !== name);
   apps = apps.map(a => a.section === name ? { ...a, section: '' } : a);
-  save();
+  saveLocal();
+  
+  if (isOnline) {
+    try {
+      await sbFetch(`sections?name=eq.${encodeURIComponent(name)}`, 'DELETE');
+      // Update apps in cloud
+      const affected = apps.filter(a => a.section === '');
+      for (const app of affected) {
+        await sbFetch(`apps?id=eq.${app.id}`, 'PATCH', { section: '' });
+      }
+    } catch(e) {}
+  }
+  
   renderAll();
   showToast('Section deleted', 'info');
 }
@@ -843,7 +1076,7 @@ function selectColor(color) {
 }
 
 // ========== CRUD ==========
-function saveApp(e) {
+async function saveApp(e) {
   e.preventDefault();
   const id      = document.getElementById('app-id').value;
   const name    = document.getElementById('app-name').value.trim();
@@ -854,19 +1087,37 @@ function saveApp(e) {
 
   if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
 
+  const appData = { id: id || Date.now().toString(), name, url, icon, color, section };
+  const v = visits[appData.id] || { count: 0, last: 0 };
+
   if (id) {
-    apps = apps.map(a => a.id === id ? { id, name, url, icon, color, section } : a);
+    apps = apps.map(a => a.id === id ? appData : a);
     showToast('App updated', 'success');
   } else {
-    apps.push({ id: Date.now().toString(), name, url, icon, color, section });
+    apps.push(appData);
     showToast('App added', 'success');
   }
-  save();
+  
+  saveLocal();
+  
+  // Sync to cloud
+  if (isOnline) {
+    try {
+      await sbFetch('apps', 'POST', {
+        ...appData,
+        visit_count: v.count,
+        last_visit: v.last
+      }).catch(() => sbFetch(`apps?id=eq.${appData.id}`, 'PATCH', {
+        ...appData, visit_count: v.count, last_visit: v.last
+      }));
+    } catch(e) {}
+  }
+  
   renderAll();
   cancelEdit();
 }
 
-function editApp(id) {
+async function editApp(id) {
   const app = apps.find(a => a.id === id);
   if (!app) return;
   document.getElementById('app-id').value    = app.id;
@@ -889,13 +1140,20 @@ function cancelEdit() {
   selectColor('green');
 }
 
-function deleteApp(id) {
+async function deleteApp(id) {
   const app = apps.find(a => a.id === id);
   if (!app) return;
   if (!confirm(`Remove "${app.name}"?`)) return;
   apps = apps.filter(a => a.id !== id);
   delete visits[id];
-  save();
+  saveLocal();
+  
+  if (isOnline) {
+    try {
+      await sbFetch(`apps?id=eq.${id}`, 'DELETE');
+    } catch(e) {}
+  }
+  
   renderAll();
   showToast('App removed', 'info');
 }
@@ -944,19 +1202,34 @@ function clearNote() {
   localStorage.removeItem('lp_note');
 }
 
-function saveNoteAsSnippet() {
+async function saveNoteAsSnippet() {
   const text = document.getElementById('note-editor').value.trim();
   if (!text) return;
-  snippets.unshift({ id: Date.now().toString(), text, created: Date.now() });
-  save();
+  const snippet = { id: Date.now().toString(), text, created: Date.now() };
+  snippets.unshift(snippet);
+  saveLocal();
+  
+  if (isOnline) {
+    try {
+      await sbFetch('snippets', 'POST', { id: snippet.id, text: snippet.text });
+    } catch(e) {}
+  }
+  
   clearNote();
   renderSnippets();
   showToast('Snippet saved', 'success');
 }
 
-function deleteSnippet(id) {
+async function deleteSnippet(id) {
   snippets = snippets.filter(s => s.id !== id);
-  save();
+  saveLocal();
+  
+  if (isOnline) {
+    try {
+      await sbFetch(`snippets?id=eq.${id}`, 'DELETE');
+    } catch(e) {}
+  }
+  
   renderSnippets();
 }
 
@@ -1016,6 +1289,63 @@ function closeAllPanels() {
   document.getElementById('notes-sidebar').classList.remove('open');
   document.getElementById('admin-panel').classList.remove('open');
   document.getElementById('overlay').classList.remove('show');
+}
+
+// ========== EXPORT / IMPORT ==========
+function exportData() {
+  const data = {
+    apps: apps,
+    sections: sections,
+    visits: visits,
+    snippets: snippets,
+    note: localStorage.getItem('lp_note') || '',
+    exportedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `launchpad-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Backup downloaded', 'success');
+}
+
+function importData() {
+  document.getElementById('import-file').click();
+}
+
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (event) => {
+    try {
+      const data = JSON.parse(event.target.result);
+      if (data.apps) {
+        apps = data.apps;
+        sections = data.sections || [];
+        visits = data.visits || {};
+        snippets = data.snippets || [];
+        if (data.note) localStorage.setItem('lp_note', data.note);
+        saveLocal();
+        
+        // Push imported data to cloud
+        if (isOnline) {
+          await forcePush();
+        }
+        
+        renderAll();
+        showToast('Backup restored!', 'success');
+      } else {
+        showToast('Invalid backup file', 'error');
+      }
+    } catch (err) {
+      showToast('Failed to parse file', 'error');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
 }
 
 // ========== TOAST ==========
