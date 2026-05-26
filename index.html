@@ -1,699 +1,1045 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Launchpad</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Launchpad</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        dark: {
-                            bg: '#0a0a0f',
-                            surface: '#12121a',
-                            surface2: '#1a1a2e',
-                            border: 'rgba(255,255,255,0.06)',
-                            text: '#e2e8f0',
-                            muted: '#64748b',
-                        },
-                        light: {
-                            bg: '#f8fafc',
-                            surface: '#ffffff',
-                            surface2: '#f1f5f9',
-                            border: 'rgba(0,0,0,0.08)',
-                            text: '#0f172a',
-                            muted: '#64748b',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: { sans: ['DM Sans', 'sans-serif'], mono: ['DM Mono', 'monospace'] }
+    }
+  }
+}
+</script>
 
-    <style>
-        * { scrollbar-width: thin; scrollbar-color: rgba(99,102,241,0.3) transparent; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 3px; }
+<style>
+  :root {
+    --bg: #f0fdf4;
+    --surface: #ffffff;
+    --surface2: #f0fdf4;
+    --surface3: #dcfce7;
+    --border: rgba(22, 163, 74, 0.15);
+    --border-strong: rgba(22, 163, 74, 0.3);
+    --text: #052e16;
+    --text-2: #166534;
+    --muted: #6b7280;
+    --accent: #16a34a;
+    --accent2: #22c55e;
+    --accent-light: rgba(22, 163, 74, 0.08);
+    --accent-glow: rgba(34, 197, 94, 0.2);
+    --sidebar-w: 0px;
+    --danger: #ef4444;
+  }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            transition: background-color 0.5s ease, color 0.3s ease;
-        }
+  * { scrollbar-width: thin; scrollbar-color: var(--accent2) transparent; }
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-thumb { background: var(--accent2); border-radius: 3px; }
 
-        .glass {
-            background: rgba(30, 41, 59, 0.4);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    transition: background 0.4s, color 0.3s;
+  }
 
-        .light .glass {
-            background: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-        }
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
 
-        .app-card {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+  .glass {
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+  }
 
-        .app-card:hover {
-            transform: translateY(-6px) scale(1.02);
-        }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 6px rgba(22,163,74,0.06), 0 4px 20px rgba(0,0,0,0.03);
+  }
 
-        .app-card:active {
-            transform: translateY(-2px) scale(0.98);
-        }
+  /* ---- APP CARD ---- */
+  .app-card {
+    transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    overflow: hidden;
+  }
+  .app-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent-light) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .app-card:hover::before { opacity: 1; }
+  .app-card:hover { transform: translateY(-5px); box-shadow: 0 8px 30px rgba(22,163,74,0.15), 0 2px 8px rgba(0,0,0,0.05); }
+  .app-card:active { transform: translateY(-2px) scale(0.98); }
 
-        .icon-ring {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+  .icon-wrap { transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); }
+  .app-card:hover .icon-wrap { transform: scale(1.12) rotate(3deg); }
 
-        .app-card:hover .icon-ring {
-            transform: scale(1.15) rotate(3deg);
-        }
+  /* ---- SIDEBAR ---- */
+  #notes-sidebar {
+    width: 280px;
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+    transform: translateX(100%);
+  }
+  #notes-sidebar.open { transform: translateX(0); }
 
-        .slide-panel {
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+  /* ---- ADMIN PANEL ---- */
+  #admin-panel {
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+    transform: translateX(100%);
+  }
+  #admin-panel.open { transform: translateX(0); }
 
-        .fade-in {
-            animation: fadeIn 0.6s ease-out forwards;
-        }
+  /* ---- SECTION ---- */
+  .section-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border-strong), transparent);
+  }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+  /* ---- LOGIN ---- */
+  .login-bg {
+    background: radial-gradient(ellipse at 30% 40%, rgba(134,239,172,0.25) 0%, transparent 55%),
+                radial-gradient(ellipse at 70% 70%, rgba(22,163,74,0.15) 0%, transparent 50%),
+                var(--bg);
+  }
 
-        .stagger-1 { animation-delay: 0.05s; }
-        .stagger-2 { animation-delay: 0.1s; }
-        .stagger-3 { animation-delay: 0.15s; }
-        .stagger-4 { animation-delay: 0.2s; }
-        .stagger-5 { animation-delay: 0.25s; }
-        .stagger-6 { animation-delay: 0.3s; }
-        .stagger-7 { animation-delay: 0.35s; }
-        .stagger-8 { animation-delay: 0.4s; }
+  /* ---- GRADIENT TEXT ---- */
+  .grad-text {
+    background: linear-gradient(135deg, #15803d 0%, #22c55e 60%, #86efac 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 
-        .gradient-text {
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+  /* ---- ANIMATIONS ---- */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up { animation: fadeUp 0.5s ease-out forwards; opacity: 0; }
+  .d1 { animation-delay: 0.04s; } .d2 { animation-delay: 0.08s; } .d3 { animation-delay: 0.12s; }
+  .d4 { animation-delay: 0.16s; } .d5 { animation-delay: 0.2s; } .d6 { animation-delay: 0.24s; }
+  .d7 { animation-delay: 0.28s; } .d8 { animation-delay: 0.32s; }
 
-        .light .gradient-text {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+  @keyframes toastIn { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(110%); } }
+  .toast-in { animation: toastIn 0.35s cubic-bezier(0.4,0,0.2,1) forwards; }
+  .toast-out { animation: toastOut 0.28s ease-in forwards; }
 
-        .search-glow:focus {
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), 0 4px 20px rgba(99, 102, 241, 0.1);
-        }
+  /* ---- INPUTS ---- */
+  .inp {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .inp:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .inp::placeholder { color: var(--muted); opacity: 0.6; }
 
-        .light .search-glow:focus {
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2), 0 4px 20px rgba(99, 102, 241, 0.08);
-        }
+  textarea.inp { resize: vertical; min-height: 80px; }
 
-        .btn-shine {
-            position: relative;
-            overflow: hidden;
-        }
+  /* ---- BADGE ---- */
+  .badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
 
-        .btn-shine::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
-            transform: translateX(-100%);
-            transition: transform 0.6s;
-        }
+  /* ---- COLOR BUTTONS ---- */
+  .color-btn { transition: all 0.2s; }
+  .color-btn.selected { ring: 2px; outline: 2px solid var(--accent); outline-offset: 2px; }
 
-        .btn-shine:hover::after {
-            transform: translateX(100%);
-        }
+  /* ---- SNIPPET CARD ---- */
+  .snippet-card { transition: all 0.2s; }
+  .snippet-card:hover { border-color: var(--accent); }
 
-        .login-bg {
-            background: 
-                radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.15) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 20%, rgba(168,85,247,0.1) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 80%, rgba(236,72,153,0.08) 0%, transparent 50%);
-        }
+  /* ---- NOTE EDITOR ---- */
+  #note-editor { font-family: 'DM Mono', monospace; font-size: 12.5px; }
 
-        .light .login-bg {
-            background: 
-                radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 20%, rgba(168,85,247,0.05) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 80%, rgba(236,72,153,0.04) 0%, transparent 50%);
-        }
+  /* ---- MOST VISITED BADGE ---- */
+  .visits-badge {
+    position: absolute;
+    top: 7px; right: 7px;
+    font-size: 9px;
+    font-weight: 700;
+    background: var(--accent);
+    color: white;
+    padding: 1px 5px;
+    border-radius: 999px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .app-card:hover .visits-badge { opacity: 1; }
+  .app-card.has-visits .visits-badge { opacity: 0.7; }
 
-        .toast {
-            animation: toastSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
+  /* ---- BTN ---- */
+  .btn-primary {
+    background: linear-gradient(135deg, #15803d 0%, #22c55e 100%);
+    color: white;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 9px 16px;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 12px rgba(22,163,74,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(22,163,74,0.4); }
+  .btn-secondary {
+    background: var(--surface3);
+    color: var(--text-2);
+    font-weight: 500;
+    border-radius: 10px;
+    padding: 9px 16px;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--accent); }
 
-        @keyframes toastSlide {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
+  /* ---- OVERLAY ---- */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(5,46,22,0.25);
+    backdrop-filter: blur(4px);
+    z-index: 40;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .overlay.show { opacity: 1; pointer-events: all; }
 
-        .toast-out {
-            animation: toastOut 0.3s ease-in forwards;
-        }
+  /* ---- SECTION COLLAPSE ---- */
+  .section-body { transition: all 0.35s ease; overflow: hidden; }
+  .chevron { transition: transform 0.3s; }
+  .collapsed .chevron { transform: rotate(-90deg); }
 
-        @keyframes toastOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
+  /* search highlight */
+  mark { background: rgba(34,197,94,0.25); border-radius: 2px; }
 
-        .admin-item {
-            transition: all 0.2s ease;
-        }
+  /* ---- RECENT STRIP ---- */
+  .recent-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 999px; padding: 5px 12px 5px 8px;
+    font-size: 12px; font-weight: 500; color: var(--text-2);
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    text-decoration: none;
+  }
+  .recent-pill:hover { border-color: var(--accent); background: var(--accent-light); transform: translateY(-1px); }
 
-        .admin-item:hover {
-            transform: translateX(4px);
-        }
-
-        input, select {
-            transition: all 0.2s ease;
-        }
-
-        .theme-toggle {
-            transition: transform 0.3s ease;
-        }
-
-        .theme-toggle:hover {
-            transform: rotate(15deg) scale(1.1);
-        }
-    </style>
+  /* password input theming */
+  #password-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 14px;
+    text-align: center;
+    outline: none;
+    transition: all 0.2s;
+  }
+  #password-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+</style>
 <base target="_blank">
 </head>
-<body class="bg-dark-bg text-dark-text min-h-screen antialiased">
+<body>
 
-    <!-- Toast Container -->
-    <div id="toast-container" class="fixed top-4 right-4 z-[200] space-y-2"></div>
+<!-- Toast Container -->
+<div id="toast-container" class="fixed top-4 right-4 z-[200] flex flex-col gap-2"></div>
 
-    <!-- Login Screen -->
-    <div id="login-screen" class="fixed inset-0 z-[100] flex items-center justify-center login-bg">
-        <div class="glass p-8 rounded-3xl max-w-sm w-full mx-4 text-center shadow-2xl fade-in">
-            <div class="w-16 h-16 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-indigo-400">
-                <i data-lucide="shield-check" class="w-8 h-8"></i>
-            </div>
-            <h2 class="text-2xl font-bold mb-2">Private Workspace</h2>
-            <p class="text-sm text-dark-muted mb-8">Enter your access password to continue</p>
-            <form onsubmit="checkPassword(event)" class="space-y-4">
-                <div class="relative">
-                    <input type="password" id="password-input" placeholder="••••••••" 
-                           class="w-full bg-dark-surface2 border border-dark-border rounded-xl px-4 py-3.5 text-center text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/50 transition-all text-dark-text placeholder:text-dark-muted/50"
-                           autocomplete="off">
-                </div>
-                <p id="login-error" class="text-xs text-rose-400 hidden font-medium">Incorrect password. Access denied.</p>
-                <button type="submit" class="w-full bg-gradient-to-r from-indigo-500 to-purple-500 font-semibold py-3.5 rounded-xl text-sm shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:scale-[1.02] transition-all btn-shine">
-                    Unlock Dashboard
-                </button>
-            </form>
-        </div>
+<!-- ===== LOGIN ===== -->
+<div id="login-screen" class="fixed inset-0 z-[100] flex items-center justify-center login-bg">
+  <div class="card p-8 rounded-2xl max-w-sm w-full mx-4 text-center shadow-2xl fade-up d1">
+    <div class="w-16 h-16 mx-auto mb-5 rounded-2xl flex items-center justify-center" style="background: var(--accent-light); border: 1px solid var(--border-strong);">
+      <i data-lucide="shield-check" class="w-8 h-8" style="color: var(--accent)"></i>
     </div>
+    <h2 class="text-2xl font-bold mb-1" style="color: var(--text)">Private Workspace</h2>
+    <p class="text-sm mb-7" style="color: var(--muted)">Enter your access password to continue</p>
+    <form onsubmit="checkPassword(event)" class="space-y-4">
+      <input type="password" id="password-input" placeholder="••••••••" autocomplete="off" class="w-full">
+      <p id="login-error" class="text-xs hidden font-medium" style="color: var(--danger)">Incorrect password. Access denied.</p>
+      <button type="submit" class="btn-primary w-full py-3.5 text-sm rounded-xl">Unlock Dashboard</button>
+    </form>
+  </div>
+</div>
 
-    <!-- Dashboard -->
-    <div id="dashboard-content" class="hidden min-h-screen flex flex-col">
+<!-- ===== DASHBOARD ===== -->
+<div id="dashboard-content" class="hidden min-h-screen flex" style="position: relative; z-index: 1;">
 
-        <!-- Header -->
-        <header class="w-full max-w-6xl mx-auto px-6 pt-8 pb-4 flex justify-between items-center">
-            <div>
-                <h1 class="text-3xl font-extrabold gradient-text tracking-tight">Launchpad</h1>
-                <p id="live-clock" class="text-xs text-dark-muted mt-1.5 tracking-wider uppercase font-medium"></p>
-            </div>
-            <div class="flex items-center gap-3">
-                <button onclick="toggleTheme()" class="theme-toggle glass p-2.5 rounded-xl text-dark-muted hover:text-indigo-400 transition-colors" title="Toggle Theme">
-                    <i data-lucide="sun" id="theme-icon" class="w-5 h-5"></i>
-                </button>
-                <button onclick="toggleAdminPanel()" class="glass px-4 py-2.5 rounded-xl text-sm font-semibold text-indigo-400 hover:text-white flex items-center gap-2 transition-all duration-300 hover:border-indigo-500/30 hover:bg-indigo-500/10">
-                    <i data-lucide="settings-2" class="w-4 h-4"></i> Manage
-                </button>
-            </div>
-        </header>
+  <!-- MAIN -->
+  <div class="flex-1 flex flex-col min-w-0">
 
-        <!-- Main Content -->
-        <main class="w-full max-w-6xl mx-auto px-6 py-10 flex-grow">
-            <!-- Search -->
-            <div class="max-w-lg mx-auto mb-14 relative">
-                <i data-lucide="search" class="absolute left-4 top-3.5 text-dark-muted/60 w-5 h-5"></i>
-                <input type="text" id="search-input" oninput="filterApps()" placeholder="Search your apps..." 
-                       class="w-full glass pl-12 pr-4 py-3.5 rounded-2xl text-sm focus:outline-none search-glow transition-all text-dark-text placeholder:text-dark-muted/50"
-                       autocomplete="off">
-                <div id="search-count" class="absolute right-4 top-3.5 text-xs text-dark-muted/50 font-medium hidden"></div>
-            </div>
-
-            <!-- Apps Grid -->
-            <div id="apps-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5"></div>
-
-            <!-- Empty State -->
-            <div id="empty-state" class="hidden text-center py-20">
-                <div class="w-20 h-20 bg-dark-surface2 rounded-2xl flex items-center justify-center mx-auto mb-4 text-dark-muted/40">
-                    <i data-lucide="search-x" class="w-10 h-10"></i>
-                </div>
-                <p class="text-lg font-semibold text-dark-text mb-1">No apps found</p>
-                <p class="text-sm text-dark-muted">Try a different search term</p>
-            </div>
-        </main>
-
-        <!-- Footer -->
-        <footer class="w-full text-center py-6 text-xs text-dark-muted/40">
-            Personal Hub &bull; Built with care
-        </footer>
-    </div>
-
-    <!-- Admin Panel -->
-    <div id="admin-overlay" onclick="toggleAdminPanel()" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300"></div>
-
-    <div id="admin-panel" class="fixed inset-y-0 right-0 w-full max-w-md glass border-l border-dark-border p-6 shadow-2xl slide-panel transform translate-x-full z-50 overflow-y-auto">
-        <div class="flex justify-between items-center mb-8">
-            <h2 class="text-xl font-bold flex items-center gap-2 text-indigo-400">
-                <i data-lucide="sliders-horizontal" class="w-5 h-5"></i> Manage Workspace
-            </h2>
-            <button onclick="toggleAdminPanel()" class="text-dark-muted hover:text-white p-1 rounded-lg hover:bg-white/5 transition-all">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
+    <!-- HEADER -->
+    <header class="sticky top-0 z-30 glass" style="border-bottom: 1px solid var(--border);">
+      <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: var(--accent); box-shadow: 0 2px 10px rgba(22,163,74,0.4);">
+            <i data-lucide="zap" class="w-4 h-4 text-white"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold grad-text tracking-tight leading-none">Launchpad</h1>
+            <p id="live-clock" class="text-[10px] font-mono mt-0.5" style="color: var(--muted)"></p>
+          </div>
         </div>
 
-        <!-- App Form -->
-        <form id="app-form" onsubmit="saveApp(event)" class="space-y-5 mb-10 bg-dark-surface2/50 p-5 rounded-2xl border border-dark-border">
-            <div class="flex items-center gap-2 mb-1">
-                <div class="w-1 h-5 bg-indigo-500 rounded-full"></div>
-                <h3 id="form-title" class="text-sm font-bold text-dark-text">Add New App</h3>
-            </div>
-
-            <input type="hidden" id="app-id">
-
-            <div>
-                <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-1.5">App Name</label>
-                <input type="text" id="app-name" required placeholder="e.g. GitHub" 
-                       class="w-full bg-dark-surface border border-dark-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 text-dark-text placeholder:text-dark-muted/40">
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-1.5">URL</label>
-                <input type="url" id="app-url" required placeholder="https://..." 
-                       class="w-full bg-dark-surface border border-dark-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 text-dark-text placeholder:text-dark-muted/40">
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-1.5">Lucide Icon</label>
-                <div class="flex gap-2">
-                    <input type="text" id="app-icon" required placeholder="e.g. github, mail, calendar..." 
-                           class="w-full bg-dark-surface border border-dark-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 text-dark-text placeholder:text-dark-muted/40">
-                    <a href="https://lucide.dev/icons" target="_blank" 
-                       class="glass px-3 flex items-center justify-center rounded-xl text-xs text-indigo-400 hover:text-white hover:bg-indigo-500/10 transition-all shrink-0" title="Browse Icons">
-                        <i data-lucide="external-link" class="w-4 h-4"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-1.5">Color Theme</label>
-                <div class="grid grid-cols-3 gap-2">
-                    <button type="button" onclick="selectColor('indigo')" class="color-btn p-2.5 rounded-xl border border-white/5 text-xs font-medium text-center transition-all hover:scale-105" data-color="indigo">
-                        <div class="w-4 h-4 rounded-full bg-indigo-500 mx-auto mb-1"></div>Indigo
-                    </button>
-                    <button type="button" onclick="selectColor('emerald')" class="color-btn p-2.5 rounded-xl border border-white/5 text-xs font-medium text-center transition-all hover:scale-105" data-color="emerald">
-                        <div class="w-4 h-4 rounded-full bg-emerald-500 mx-auto mb-1"></div>Emerald
-                    </button>
-                    <button type="button" onclick="selectColor('sky')" class="color-btn p-2.5 rounded-xl border border-white/5 text-xs font-medium text-center transition-all hover:scale-105" data-color="sky">
-                        <div class="w-4 h-4 rounded-full bg-sky-500 mx-auto mb-1"></div>Sky
-                    </button>
-                    <button type="button" onclick="selectColor('amber')" class="color-btn p-2.5 rounded-xl border border-white/5 text-xs font-medium text-center transition-all hover:scale-105" data-color="amber">
-                        <div class="w-4 h-4 rounded-full bg-amber-500 mx-auto mb-1"></div>Amber
-                    </button>
-                    <button type="button" onclick="selectColor('rose')" class="color-btn p-2.5 rounded-xl border border-white/5 text-xs font-medium text-center transition-all hover:scale-105" data-color="rose">
-                        <div class="w-4 h-4 rounded-full bg-rose-500 mx-auto mb-1"></div>Rose
-                    </button>
-                    <button type="button" onclick="selectColor('purple')" class="color-btn p-2.5 rounded-xl border border-white/5 text-xs font-medium text-center transition-all hover:scale-105" data-color="purple">
-                        <div class="w-4 h-4 rounded-full bg-purple-500 mx-auto mb-1"></div>Purple
-                    </button>
-                </div>
-                <input type="hidden" id="app-color" value="indigo">
-            </div>
-
-            <div class="flex gap-2 pt-2">
-                <button type="button" onclick="cancelEdit()" id="cancel-btn" class="hidden flex-1 bg-dark-surface2 border border-dark-border hover:border-white/10 font-medium py-2.5 rounded-xl text-sm transition-all text-dark-muted hover:text-dark-text">
-                    Cancel
-                </button>
-                <button type="submit" class="flex-1 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 font-semibold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-indigo-500/20 btn-shine">
-                    Save App
-                </button>
-            </div>
-        </form>
-
-        <!-- App List -->
-        <div class="mb-4">
-            <h3 class="text-xs font-bold text-dark-muted uppercase tracking-wider mb-3 flex items-center gap-2">
-                <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> Your Apps <span id="app-count" class="bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full text-[10px]"></span>
-            </h3>
+        <!-- Search -->
+        <div class="flex-1 max-w-xs relative hidden sm:block">
+          <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4" style="color: var(--muted)"></i>
+          <input type="text" id="search-input" oninput="filterApps()" placeholder="Search apps…"
+            class="inp pl-9 py-2 text-sm" style="border-radius: 999px; padding-top: 7px; padding-bottom: 7px;">
         </div>
-        <div id="admin-apps-list" class="space-y-2"></div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="toggleNotes()" id="notes-btn" title="Notes & Clips"
+            class="p-2.5 rounded-xl transition-all hover:scale-105" style="background: var(--surface2); border: 1px solid var(--border); color: var(--accent)">
+            <i data-lucide="notebook-pen" class="w-4 h-4"></i>
+          </button>
+          <button onclick="toggleAdminPanel()" title="Manage"
+            class="p-2.5 rounded-xl transition-all hover:scale-105 flex items-center gap-1.5 text-xs font-semibold px-3" style="background: var(--accent-light); border: 1px solid var(--border-strong); color: var(--accent)">
+            <i data-lucide="settings-2" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">Manage</span>
+          </button>
+          <button onclick="logout()" title="Logout"
+            class="p-2.5 rounded-xl transition-all hover:scale-105" style="background: #fef2f2; border: 1px solid #fecaca; color: #ef4444">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <main class="max-w-6xl mx-auto w-full px-6 py-8 flex-1">
+
+      <!-- Mobile Search -->
+      <div class="sm:hidden mb-6 relative">
+        <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4" style="color: var(--muted)"></i>
+        <input type="text" id="search-input-mobile" oninput="filterApps(true)" placeholder="Search apps…"
+          class="inp pl-9 py-2 text-sm" style="border-radius: 999px;">
+      </div>
+
+      <!-- RECENTLY USED -->
+      <div id="recent-strip-wrap" class="mb-8 hidden">
+        <div class="flex items-center gap-2 mb-3">
+          <i data-lucide="clock" class="w-3.5 h-3.5" style="color: var(--accent)"></i>
+          <span class="text-xs font-bold uppercase tracking-wider" style="color: var(--muted)">Recently Used</span>
+        </div>
+        <div id="recent-strip" class="flex gap-2 flex-wrap"></div>
+      </div>
+
+      <!-- SECTIONS -->
+      <div id="apps-container"></div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="hidden text-center py-20">
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background: var(--surface3); color: var(--muted)">
+          <i data-lucide="search-x" class="w-8 h-8"></i>
+        </div>
+        <p class="font-semibold mb-1">No apps found</p>
+        <p class="text-sm" style="color: var(--muted)">Try a different search term</p>
+      </div>
+    </main>
+
+    <footer class="text-center py-5 text-xs" style="color: var(--muted); border-top: 1px solid var(--border)">
+      Personal Hub &bull; Built with care
+    </footer>
+  </div>
+
+  <!-- NOTES SIDEBAR -->
+  <aside id="notes-sidebar" class="fixed right-0 top-0 bottom-0 z-50 flex flex-col shadow-2xl" style="width: 290px; background: var(--surface); border-left: 1px solid var(--border);">
+    <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border)">
+      <span class="font-bold text-sm flex items-center gap-2" style="color: var(--text-2)">
+        <i data-lucide="notebook-pen" class="w-4 h-4" style="color: var(--accent)"></i> Notes & Clips
+      </span>
+      <button onclick="toggleNotes()" style="color: var(--muted)" class="hover:opacity-70 transition-opacity">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
     </div>
 
-    <script>
-        // ========== CONFIG ==========
-        const PASSWORD_HASH = "ff34b971e4ff1a9e0132f289826bcedd57c67b0fe1409d4365e3b1b1d0bc8d31";
+    <!-- Quick Note -->
+    <div class="px-4 pt-4 pb-3" style="border-bottom: 1px solid var(--border)">
+      <p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color: var(--muted)">Quick Note</p>
+      <textarea id="note-editor" class="inp w-full" style="min-height: 90px; font-family: 'DM Mono', monospace; font-size: 12px;" placeholder="Type a note…" oninput="autoSaveNote()"></textarea>
+      <div class="flex gap-2 mt-2">
+        <button onclick="saveNoteAsSnippet()" class="btn-primary py-1.5 text-xs flex-1">Save as Snippet</button>
+        <button onclick="clearNote()" class="btn-secondary py-1.5 text-xs">Clear</button>
+      </div>
+    </div>
 
-        // ========== STATE ==========
-        let apps = [];
-        let currentTheme = 'dark';
+    <!-- Snippets -->
+    <div class="flex-1 overflow-y-auto px-4 py-3">
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-[10px] font-bold uppercase tracking-wider" style="color: var(--muted)">Saved Snippets</p>
+        <span id="snippet-count" class="badge" style="background: var(--accent-light); color: var(--accent)">0</span>
+      </div>
+      <div id="snippets-list" class="flex flex-col gap-2"></div>
+    </div>
+  </aside>
+</div>
 
-        const defaultApps = [
-            { id: '1', name: 'GitHub', url: 'https://github.com', icon: 'github', color: 'indigo' },
-            { id: '2', name: 'Google Sheets', url: 'https://sheets.google.com', icon: 'table-2', color: 'emerald' },
-            { id: '3', name: 'Gmail', url: 'https://mail.google.com', icon: 'mail', color: 'rose' },
-            { id: '4', name: 'Calendar', url: 'https://calendar.google.com', icon: 'calendar', color: 'amber' },
-            { id: '5', name: 'Drive', url: 'https://drive.google.com', icon: 'hard-drive', color: 'sky' },
-            { id: '6', name: 'YouTube', url: 'https://youtube.com', icon: 'play-circle', color: 'rose' }
-        ];
+<!-- ===== OVERLAY ===== -->
+<div id="overlay" class="overlay" onclick="closeAllPanels()"></div>
 
-        const colorMap = {
-            indigo:   { text: 'text-indigo-400',   bg: 'bg-indigo-500/10',   border: 'border-indigo-500/20',   ring: 'ring-indigo-500/20',   hover: 'hover:bg-indigo-500/20' },
-            emerald:  { text: 'text-emerald-400',  bg: 'bg-emerald-500/10',  border: 'border-emerald-500/20',  ring: 'ring-emerald-500/20',  hover: 'hover:bg-emerald-500/20' },
-            sky:      { text: 'text-sky-400',      bg: 'bg-sky-500/10',      border: 'border-sky-500/20',      ring: 'ring-sky-500/20',      hover: 'hover:bg-sky-500/20' },
-            amber:    { text: 'text-amber-400',    bg: 'bg-amber-500/10',    border: 'border-amber-500/20',    ring: 'ring-amber-500/20',    hover: 'hover:bg-amber-500/20' },
-            rose:     { text: 'text-rose-400',     bg: 'bg-rose-500/10',    border: 'border-rose-500/20',    ring: 'ring-rose-500/20',    hover: 'hover:bg-rose-500/20' },
-            purple:   { text: 'text-purple-400',   bg: 'bg-purple-500/10',  border: 'border-purple-500/20',  ring: 'ring-purple-500/20',  hover: 'hover:bg-purple-500/20' }
-        };
+<!-- ===== ADMIN PANEL ===== -->
+<div id="admin-panel" class="fixed inset-y-0 right-0 z-50 overflow-y-auto" style="width: 380px; background: var(--surface); border-left: 1px solid var(--border); box-shadow: -4px 0 40px rgba(0,0,0,0.08);">
+  <div class="flex items-center justify-between px-6 py-5" style="border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 1;">
+    <h2 class="font-bold flex items-center gap-2 text-sm" style="color: var(--text-2)">
+      <i data-lucide="sliders-horizontal" class="w-4 h-4" style="color: var(--accent)"></i> Manage Workspace
+    </h2>
+    <button onclick="toggleAdminPanel()" style="color: var(--muted)" class="hover:opacity-70 p-1">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+  </div>
 
-        // ========== INIT ==========
-        document.addEventListener('DOMContentLoaded', () => {
-            initTheme();
-            initApps();
-            updateClock();
-            setInterval(updateClock, 1000);
+  <div class="p-5 space-y-6">
 
-            if (sessionStorage.getItem('dashboard_authenticated') === 'true') {
-                unlockDashboard();
-            }
-        });
+    <!-- SECTION MANAGER -->
+    <div>
+      <p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color: var(--muted)">Sections / Groups</p>
+      <div class="flex gap-2">
+        <input type="text" id="new-section-name" class="inp flex-1" placeholder="Section name…">
+        <button onclick="addSection()" class="btn-primary px-4 py-2 text-xs">+ Add</button>
+      </div>
+      <div id="sections-admin-list" class="mt-3 space-y-1.5"></div>
+    </div>
 
-        function initTheme() {
-            const saved = localStorage.getItem('dashboard_theme');
-            if (saved) {
-                currentTheme = saved;
-            } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
-                currentTheme = 'light';
-            }
-            applyTheme();
+    <!-- APP FORM -->
+    <div class="p-4 rounded-xl" style="background: var(--surface2); border: 1px solid var(--border)">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="w-1 h-4 rounded-full" style="background: var(--accent)"></div>
+        <h3 id="form-title" class="text-sm font-bold" style="color: var(--text)">Add New App</h3>
+      </div>
+
+      <form id="app-form" onsubmit="saveApp(event)" class="space-y-3">
+        <input type="hidden" id="app-id">
+
+        <div>
+          <label class="text-[10px] font-bold uppercase tracking-wider block mb-1" style="color: var(--muted)">App Name</label>
+          <input type="text" id="app-name" required class="inp" placeholder="e.g. GitHub">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold uppercase tracking-wider block mb-1" style="color: var(--muted)">URL</label>
+          <input type="url" id="app-url" required class="inp" placeholder="https://…">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold uppercase tracking-wider block mb-1" style="color: var(--muted)">Section</label>
+          <select id="app-section" class="inp">
+            <option value="">Unsectioned</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-[10px] font-bold uppercase tracking-wider block mb-1" style="color: var(--muted)">
+            Lucide Icon
+            <a href="https://lucide.dev/icons" target="_blank" class="ml-2 normal-case text-[10px]" style="color: var(--accent)">Browse →</a>
+          </label>
+          <input type="text" id="app-icon" required class="inp" placeholder="e.g. github, mail, calendar">
+        </div>
+        <div>
+          <label class="text-[10px] font-bold uppercase tracking-wider block mb-1.5" style="color: var(--muted)">Color</label>
+          <div class="grid grid-cols-6 gap-1.5" id="color-picker">
+            <!-- Rendered by JS -->
+          </div>
+          <input type="hidden" id="app-color" value="green">
+        </div>
+        <div class="flex gap-2 pt-1">
+          <button type="button" onclick="cancelEdit()" id="cancel-btn" class="btn-secondary flex-1 hidden">Cancel</button>
+          <button type="submit" class="btn-primary flex-1">Save App</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- APP LIST -->
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-[10px] font-bold uppercase tracking-wider" style="color: var(--muted)">All Apps</p>
+        <span id="app-count" class="badge" style="background: var(--accent-light); color: var(--accent)">0</span>
+      </div>
+      <div id="admin-apps-list" class="space-y-1.5"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ========== CONFIG ==========
+const PASSWORD_HASH = "ff34b971e4ff1a9e0132f289826bcedd57c67b0fe1409d4365e3b1b1d0bc8d31";
+
+const COLORS = {
+  green:   { dot: '#22c55e', bg: 'rgba(34,197,94,0.1)',  text: '#15803d', border: 'rgba(34,197,94,0.25)' },
+  emerald: { dot: '#10b981', bg: 'rgba(16,185,129,0.1)', text: '#065f46', border: 'rgba(16,185,129,0.25)' },
+  teal:    { dot: '#14b8a6', bg: 'rgba(20,184,166,0.1)', text: '#0f766e', border: 'rgba(20,184,166,0.25)' },
+  sky:     { dot: '#0ea5e9', bg: 'rgba(14,165,233,0.1)', text: '#0369a1', border: 'rgba(14,165,233,0.25)' },
+  indigo:  { dot: '#6366f1', bg: 'rgba(99,102,241,0.1)', text: '#4338ca', border: 'rgba(99,102,241,0.25)' },
+  violet:  { dot: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', text: '#6d28d9', border: 'rgba(139,92,246,0.25)' },
+  amber:   { dot: '#f59e0b', bg: 'rgba(245,158,11,0.1)', text: '#92400e', border: 'rgba(245,158,11,0.25)' },
+  rose:    { dot: '#f43f5e', bg: 'rgba(244,63,94,0.1)',  text: '#9f1239', border: 'rgba(244,63,94,0.25)' },
+  slate:   { dot: '#64748b', bg: 'rgba(100,116,139,0.1)',text: '#334155', border: 'rgba(100,116,139,0.25)' },
+};
+
+// ========== STATE ==========
+let apps = [];
+let sections = [];
+let visits = {};
+let snippets = [];
+let noteTimeout = null;
+
+const defaultSections = ['Work', 'Personal', 'Tools'];
+const defaultApps = [
+  { id: '1', name: 'GitHub',        url: 'https://github.com',            icon: 'github',      color: 'indigo',  section: 'Work'     },
+  { id: '2', name: 'Google Sheets', url: 'https://sheets.google.com',     icon: 'table-2',     color: 'green',   section: 'Work'     },
+  { id: '3', name: 'Gmail',         url: 'https://mail.google.com',       icon: 'mail',        color: 'rose',    section: 'Personal' },
+  { id: '4', name: 'Calendar',      url: 'https://calendar.google.com',   icon: 'calendar',    color: 'amber',   section: 'Personal' },
+  { id: '5', name: 'Drive',         url: 'https://drive.google.com',      icon: 'hard-drive',  color: 'sky',     section: 'Work'     },
+  { id: '6', name: 'YouTube',       url: 'https://youtube.com',           icon: 'play-circle', color: 'rose',    section: 'Personal' },
+  { id: '7', name: 'Figma',         url: 'https://figma.com',             icon: 'pen-tool',    color: 'violet',  section: 'Tools'    },
+  { id: '8', name: 'Notion',        url: 'https://notion.so',             icon: 'file-text',   color: 'slate',   section: 'Tools'    },
+];
+
+// ========== INIT ==========
+document.addEventListener('DOMContentLoaded', () => {
+  initData();
+  buildColorPicker();
+  updateClock();
+  setInterval(updateClock, 1000);
+  if (sessionStorage.getItem('lp_auth') === 'true') unlockDashboard();
+  lucide.createIcons();
+});
+
+function initData() {
+  apps     = JSON.parse(localStorage.getItem('lp_apps')     || 'null') || [...defaultApps];
+  sections = JSON.parse(localStorage.getItem('lp_sections') || 'null') || [...defaultSections];
+  visits   = JSON.parse(localStorage.getItem('lp_visits')   || '{}');
+  snippets = JSON.parse(localStorage.getItem('lp_snippets') || '[]');
+  const savedNote = localStorage.getItem('lp_note') || '';
+  setTimeout(() => {
+    const el = document.getElementById('note-editor');
+    if (el) el.value = savedNote;
+  }, 100);
+}
+
+function save() {
+  localStorage.setItem('lp_apps',     JSON.stringify(apps));
+  localStorage.setItem('lp_sections', JSON.stringify(sections));
+  localStorage.setItem('lp_visits',   JSON.stringify(visits));
+  localStorage.setItem('lp_snippets', JSON.stringify(snippets));
+}
+
+// ========== AUTH ==========
+async function sha256(s) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function checkPassword(e) {
+  e.preventDefault();
+  const val = document.getElementById('password-input').value;
+  const hash = await sha256(val);
+  if (hash === PASSWORD_HASH) {
+    sessionStorage.setItem('lp_auth', 'true');
+    unlockDashboard();
+    showToast('Welcome back!', 'success');
+  } else {
+    document.getElementById('login-error').classList.remove('hidden');
+    document.getElementById('password-input').value = '';
+    document.getElementById('password-input').focus();
+  }
+}
+
+function unlockDashboard() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('dashboard-content').classList.remove('hidden');
+  renderAll();
+}
+
+function logout() {
+  if (!confirm('Log out of Launchpad?')) return;
+  sessionStorage.removeItem('lp_auth');
+  document.getElementById('dashboard-content').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('password-input').value = '';
+  document.getElementById('login-error').classList.add('hidden');
+  closeAllPanels();
+}
+
+// ========== CLOCK ==========
+function updateClock() {
+  const now = new Date();
+  const d = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const t = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  const el = document.getElementById('live-clock');
+  if (el) el.textContent = `${d} · ${t}`;
+}
+
+// ========== RENDER ==========
+function renderAll() {
+  renderRecent();
+  renderApps();
+  renderAdminList();
+  renderSectionsAdmin();
+  populateSectionSelect();
+  renderSnippets();
+  lucide.createIcons();
+  fixBrokenIcons();
+}
+
+function renderRecent() {
+  const strip = document.getElementById('recent-strip');
+  const wrap  = document.getElementById('recent-strip-wrap');
+  strip.innerHTML = '';
+
+  const sorted = Object.entries(visits)
+    .filter(([id]) => apps.find(a => a.id === id))
+    .sort((a, b) => b[1].last - a[1].last)
+    .slice(0, 6);
+
+  if (sorted.length === 0) { wrap.classList.add('hidden'); return; }
+  wrap.classList.remove('hidden');
+
+  sorted.forEach(([id]) => {
+    const app = apps.find(a => a.id === id);
+    if (!app) return;
+    const c = COLORS[app.color] || COLORS.green;
+    const pill = document.createElement('a');
+    pill.href = app.url;
+    pill.target = '_blank';
+    pill.className = 'recent-pill';
+    pill.onclick = () => trackVisit(app.id);
+    pill.innerHTML = `
+      <span class="w-5 h-5 rounded-md flex items-center justify-center shrink-0" style="background:${c.bg}; border: 1px solid ${c.border}">
+        <i data-lucide="${app.icon||'globe'}" class="w-3 h-3" style="color:${c.text}"></i>
+      </span>
+      ${app.name}
+    `;
+    strip.appendChild(pill);
+  });
+}
+
+function renderApps(query = '') {
+  const container = document.getElementById('apps-container');
+  const emptyState = document.getElementById('empty-state');
+  container.innerHTML = '';
+
+  const q = query.toLowerCase();
+  const filtered = q ? apps.filter(a => a.name.toLowerCase().includes(q) || (a.section||'').toLowerCase().includes(q)) : apps;
+
+  if (filtered.length === 0 && q) {
+    container.classList.add('hidden');
+    emptyState.classList.remove('hidden');
+    return;
+  }
+  container.classList.remove('hidden');
+  emptyState.classList.add('hidden');
+
+  // Group by section
+  const groups = {};
+  const sectionOrder = [...sections, '__none__'];
+  filtered.forEach(app => {
+    const key = app.section || '__none__';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(app);
+  });
+
+  let delay = 0;
+  sectionOrder.forEach(sectionKey => {
+    const sectionApps = groups[sectionKey];
+    if (!sectionApps || sectionApps.length === 0) return;
+
+    const label = sectionKey === '__none__' ? 'Other' : sectionKey;
+    const sectionEl = document.createElement('div');
+    sectionEl.className = 'mb-10';
+    sectionEl.dataset.section = sectionKey;
+
+    sectionEl.innerHTML = `
+      <div class="section-header" style="cursor: pointer;" onclick="toggleSection(this)">
+        <span class="text-xs font-bold uppercase tracking-wider" style="color: var(--accent); white-space: nowrap">${escHtml(label)}</span>
+        <div class="section-line"></div>
+        <span class="text-xs font-medium badge" style="background: var(--accent-light); color: var(--accent)">${sectionApps.length}</span>
+        <i data-lucide="chevron-down" class="w-3.5 h-3.5 chevron shrink-0" style="color: var(--accent)"></i>
+      </div>
+      <div class="section-body grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" style="max-height: 1000px;">
+        ${sectionApps.map((app, i) => {
+          delay++;
+          const c = COLORS[app.color] || COLORS.green;
+          const vc = visits[app.id] ? visits[app.id].count : 0;
+          const d = Math.min(delay, 8);
+          return `
+            <a href="${app.url}" target="_blank" onclick="trackVisit('${app.id}')"
+               class="app-card card p-5 rounded-2xl flex flex-col items-center text-center group fade-up d${d} ${vc > 0 ? 'has-visits' : ''}"
+               data-app-id="${app.id}">
+              ${vc > 0 ? `<span class="visits-badge">${vc}</span>` : ''}
+              <div class="icon-wrap w-13 h-13 w-[52px] h-[52px] rounded-xl flex items-center justify-center mb-3 border"
+                   style="background:${c.bg}; border-color:${c.border}; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5)">
+                <i data-lucide="${app.icon||'globe'}" class="w-6 h-6" style="color:${c.text}" data-icon-name="${app.icon}" data-app-url="${app.url}"></i>
+              </div>
+              <span class="text-sm font-semibold leading-tight" style="color: var(--text)">${escHtml(app.name)}</span>
+              <span class="text-[10px] mt-1 opacity-0 group-hover:opacity-100 transition-opacity" style="color: var(--accent)">Open →</span>
+            </a>
+          `;
+        }).join('')}
+      </div>
+    `;
+    container.appendChild(sectionEl);
+  });
+}
+
+function toggleSection(headerEl) {
+  const parent = headerEl.closest('[data-section]');
+  const body = parent.querySelector('.section-body');
+  const isCollapsed = parent.classList.contains('collapsed');
+
+  if (isCollapsed) {
+    parent.classList.remove('collapsed');
+    body.style.maxHeight = '1000px';
+    body.style.opacity = '1';
+  } else {
+    parent.classList.add('collapsed');
+    body.style.maxHeight = '0';
+    body.style.opacity = '0';
+  }
+  lucide.createIcons();
+}
+
+function filterApps(isMobile = false) {
+  const q = isMobile
+    ? document.getElementById('search-input-mobile').value
+    : document.getElementById('search-input').value;
+  renderApps(q);
+  lucide.createIcons();
+  fixBrokenIcons();
+}
+
+// ========== VISIT TRACKING ==========
+function trackVisit(id) {
+  if (!visits[id]) visits[id] = { count: 0, last: 0 };
+  visits[id].count++;
+  visits[id].last = Date.now();
+  save();
+  setTimeout(() => { renderRecent(); lucide.createIcons(); }, 300);
+}
+
+// ========== FAVICON FALLBACK ==========
+function fixBrokenIcons() {
+  setTimeout(() => {
+    document.querySelectorAll('i[data-icon-name]').forEach(el => {
+      const svgParent = el.closest('.icon-wrap') || el.parentElement;
+      // If lucide didn't render an svg inside, it'll still be an <i>
+      // Check if the svg was injected
+      const svg = svgParent.querySelector('svg');
+      if (!svg) {
+        // Try to render as favicon
+        const url = el.dataset.appUrl;
+        if (url) {
+          try {
+            const domain = new URL(url).origin;
+            const img = document.createElement('img');
+            img.src = `${domain}/favicon.ico`;
+            img.className = 'w-6 h-6 rounded-md';
+            img.onerror = () => {
+              img.src = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+              img.onerror = () => { img.style.display = 'none'; };
+            };
+            el.replaceWith(img);
+          } catch(e) {}
         }
+      }
+    });
+  }, 200);
+}
 
-        function initApps() {
-            const stored = localStorage.getItem('dashboard_apps');
-            apps = stored ? JSON.parse(stored) : [...defaultApps];
-        }
+// ========== SECTIONS ADMIN ==========
+function addSection() {
+  const inp = document.getElementById('new-section-name');
+  const name = inp.value.trim();
+  if (!name || sections.includes(name)) { showToast('Section already exists or empty', 'error'); return; }
+  sections.push(name);
+  save();
+  inp.value = '';
+  renderSectionsAdmin();
+  populateSectionSelect();
+  renderAll();
+  showToast(`Section "${name}" created`, 'success');
+}
 
-        // ========== THEME ==========
-        function toggleTheme() {
-            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            localStorage.setItem('dashboard_theme', currentTheme);
-            applyTheme();
-        }
+function deleteSection(name) {
+  if (!confirm(`Delete section "${name}"? Apps in it will move to Other.`)) return;
+  sections = sections.filter(s => s !== name);
+  apps = apps.map(a => a.section === name ? { ...a, section: '' } : a);
+  save();
+  renderAll();
+  showToast('Section deleted', 'info');
+}
 
-        function applyTheme() {
-            const body = document.body;
-            const icon = document.getElementById('theme-icon');
+function renderSectionsAdmin() {
+  const list = document.getElementById('sections-admin-list');
+  list.innerHTML = sections.map(s => `
+    <div class="flex items-center justify-between px-3 py-2 rounded-lg" style="background: var(--surface3); border: 1px solid var(--border)">
+      <span class="text-xs font-medium" style="color: var(--text-2)">${escHtml(s)}</span>
+      <button onclick="deleteSection('${escAttr(s)}')" class="text-xs hover:opacity-70 transition-opacity" style="color: var(--danger)">
+        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+      </button>
+    </div>
+  `).join('');
+  lucide.createIcons();
+}
 
-            if (currentTheme === 'light') {
-                body.classList.remove('bg-dark-bg', 'text-dark-text');
-                body.classList.add('bg-light-bg', 'text-light-text', 'light');
-                icon.setAttribute('data-lucide', 'moon');
-            } else {
-                body.classList.remove('bg-light-bg', 'text-light-text', 'light');
-                body.classList.add('bg-dark-bg', 'text-dark-text');
-                icon.setAttribute('data-lucide', 'sun');
-            }
+function populateSectionSelect() {
+  const sel = document.getElementById('app-section');
+  const cur = sel.value;
+  sel.innerHTML = `<option value="">Unsectioned</option>` +
+    sections.map(s => `<option value="${escAttr(s)}" ${cur === s ? 'selected' : ''}>${escHtml(s)}</option>`).join('');
+}
 
-            lucide.createIcons();
-        }
+// ========== COLOR PICKER ==========
+function buildColorPicker() {
+  const wrap = document.getElementById('color-picker');
+  wrap.innerHTML = Object.entries(COLORS).map(([key, c]) => `
+    <button type="button" onclick="selectColor('${key}')" data-color="${key}"
+      class="color-btn w-7 h-7 rounded-full transition-all hover:scale-110"
+      style="background:${c.dot}; box-shadow: 0 2px 6px ${c.dot}55"
+      title="${key}"></button>
+  `).join('');
+  selectColor('green');
+}
 
-        // ========== AUTH ==========
-        async function sha256(string) {
-            const utf8 = new TextEncoder().encode(string);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', utf8);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
+function selectColor(color) {
+  document.getElementById('app-color').value = color;
+  document.querySelectorAll('.color-btn').forEach(btn => {
+    btn.classList.toggle('selected', btn.dataset.color === color);
+    btn.style.transform = btn.dataset.color === color ? 'scale(1.25)' : '';
+    btn.style.boxShadow = btn.dataset.color === color
+      ? `0 0 0 3px white, 0 0 0 5px ${COLORS[color]?.dot}` : `0 2px 6px ${COLORS[btn.dataset.color]?.dot}55`;
+  });
+}
 
-        async function checkPassword(e) {
-            e.preventDefault();
-            const input = document.getElementById('password-input').value;
-            const errorMsg = document.getElementById('login-error');
+// ========== CRUD ==========
+function saveApp(e) {
+  e.preventDefault();
+  const id      = document.getElementById('app-id').value;
+  const name    = document.getElementById('app-name').value.trim();
+  let   url     = document.getElementById('app-url').value.trim();
+  const icon    = document.getElementById('app-icon').value.trim();
+  const color   = document.getElementById('app-color').value;
+  const section = document.getElementById('app-section').value;
 
-            const inputHash = await sha256(input);
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
 
-            if (inputHash === PASSWORD_HASH) {
-                sessionStorage.setItem('dashboard_authenticated', 'true');
-                unlockDashboard();
-                showToast('Welcome back!', 'success');
-            } else {
-                errorMsg.classList.remove('hidden');
-                document.getElementById('password-input').value = '';
-                document.getElementById('password-input').focus();
-            }
-        }
+  if (id) {
+    apps = apps.map(a => a.id === id ? { id, name, url, icon, color, section } : a);
+    showToast('App updated', 'success');
+  } else {
+    apps.push({ id: Date.now().toString(), name, url, icon, color, section });
+    showToast('App added', 'success');
+  }
+  save();
+  renderAll();
+  cancelEdit();
+}
 
-        function unlockDashboard() {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('dashboard-content').classList.remove('hidden');
-            renderDashboard();
-        }
+function editApp(id) {
+  const app = apps.find(a => a.id === id);
+  if (!app) return;
+  document.getElementById('app-id').value    = app.id;
+  document.getElementById('app-name').value  = app.name;
+  document.getElementById('app-url').value   = app.url;
+  document.getElementById('app-icon').value  = app.icon;
+  selectColor(app.color);
+  populateSectionSelect();
+  document.getElementById('app-section').value = app.section || '';
+  document.getElementById('form-title').textContent = 'Edit App';
+  document.getElementById('cancel-btn').classList.remove('hidden');
+  document.getElementById('admin-panel').scrollTop = 0;
+}
 
-        // ========== RENDER ==========
-        function renderDashboard() {
-            const grid = document.getElementById('apps-grid');
-            const emptyState = document.getElementById('empty-state');
-            const searchCount = document.getElementById('search-count');
+function cancelEdit() {
+  document.getElementById('app-form').reset();
+  document.getElementById('app-id').value = '';
+  document.getElementById('form-title').textContent = 'Add New App';
+  document.getElementById('cancel-btn').classList.add('hidden');
+  selectColor('green');
+}
 
-            grid.innerHTML = '';
+function deleteApp(id) {
+  const app = apps.find(a => a.id === id);
+  if (!app) return;
+  if (!confirm(`Remove "${app.name}"?`)) return;
+  apps = apps.filter(a => a.id !== id);
+  delete visits[id];
+  save();
+  renderAll();
+  showToast('App removed', 'info');
+}
 
-            const query = document.getElementById('search-input').value.toLowerCase();
-            const filtered = apps.filter(app => app.name.toLowerCase().includes(query));
+function renderAdminList() {
+  const list = document.getElementById('admin-apps-list');
+  const count = document.getElementById('app-count');
+  count.textContent = apps.length;
+  list.innerHTML = apps.map(app => {
+    const c = COLORS[app.color] || COLORS.green;
+    return `
+      <div class="flex items-center justify-between p-2.5 rounded-xl" style="background: var(--surface3); border: 1px solid var(--border)">
+        <div class="flex items-center gap-2 min-w-0">
+          <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style="background:${c.bg}; border:1px solid ${c.border}">
+            <i data-lucide="${app.icon||'globe'}" class="w-3.5 h-3.5" style="color:${c.text}"></i>
+          </div>
+          <div class="min-w-0">
+            <p class="text-xs font-semibold truncate" style="color: var(--text)">${escHtml(app.name)}</p>
+            <p class="text-[10px] truncate" style="color: var(--muted)">${app.section || 'Other'}</p>
+          </div>
+        </div>
+        <div class="flex gap-0.5 shrink-0 ml-2">
+          <button onclick="editApp('${app.id}')" class="p-1.5 rounded-lg transition-colors hover:opacity-70" style="color: var(--accent)" title="Edit">
+            <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+          </button>
+          <button onclick="deleteApp('${app.id}')" class="p-1.5 rounded-lg transition-colors hover:opacity-70" style="color: var(--danger)" title="Delete">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  lucide.createIcons();
+}
 
-            if (filtered.length === 0 && query) {
-                grid.classList.add('hidden');
-                emptyState.classList.remove('hidden');
-                searchCount.classList.add('hidden');
-            } else {
-                grid.classList.remove('hidden');
-                emptyState.classList.add('hidden');
+// ========== NOTES & SNIPPETS ==========
+function autoSaveNote() {
+  clearTimeout(noteTimeout);
+  noteTimeout = setTimeout(() => {
+    localStorage.setItem('lp_note', document.getElementById('note-editor').value);
+  }, 600);
+}
 
-                if (query) {
-                    searchCount.textContent = `${filtered.length} result${filtered.length !== 1 ? 's' : ''}`;
-                    searchCount.classList.remove('hidden');
-                } else {
-                    searchCount.classList.add('hidden');
-                }
+function clearNote() {
+  document.getElementById('note-editor').value = '';
+  localStorage.removeItem('lp_note');
+}
 
-                filtered.forEach((app, i) => {
-                    const c = colorMap[app.color] || colorMap.indigo;
-                    const stagger = Math.min(i + 1, 8);
+function saveNoteAsSnippet() {
+  const text = document.getElementById('note-editor').value.trim();
+  if (!text) return;
+  snippets.unshift({ id: Date.now().toString(), text, created: Date.now() });
+  save();
+  clearNote();
+  renderSnippets();
+  showToast('Snippet saved', 'success');
+}
 
-                    grid.innerHTML += `
-                        <a href="${app.url}" target="_blank" 
-                           class="app-card glass p-6 rounded-2xl flex flex-col items-center justify-center text-center group fade-in stagger-${stagger}">
-                            <div class="icon-ring w-14 h-14 rounded-2xl flex items-center justify-center mb-4 border shadow-inner ${c.bg} ${c.border} ${c.text}">
-                                <i data-lucide="${app.icon || 'globe'}" class="w-7 h-7"></i>
-                            </div>
-                            <span class="text-sm font-semibold text-dark-text/80 group-hover:text-dark-text transition-colors">${app.name}</span>
-                            <span class="text-[10px] text-dark-muted/50 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Open →</span>
-                        </a>
-                    `;
-                });
-            }
+function deleteSnippet(id) {
+  snippets = snippets.filter(s => s.id !== id);
+  save();
+  renderSnippets();
+}
 
-            renderAdminList();
-            lucide.createIcons();
-        }
+function copySnippet(id) {
+  const s = snippets.find(x => x.id === id);
+  if (!s) return;
+  navigator.clipboard.writeText(s.text).then(() => showToast('Copied!', 'success'));
+}
 
-        function renderAdminList() {
-            const list = document.getElementById('admin-apps-list');
-            const count = document.getElementById('app-count');
+function renderSnippets() {
+  const list = document.getElementById('snippets-list');
+  const count = document.getElementById('snippet-count');
+  count.textContent = snippets.length;
+  if (snippets.length === 0) {
+    list.innerHTML = `<p class="text-xs text-center py-4" style="color: var(--muted)">No snippets yet</p>`;
+    return;
+  }
+  list.innerHTML = snippets.map(s => `
+    <div class="snippet-card rounded-xl p-3" style="background: var(--surface2); border: 1px solid var(--border)">
+      <pre class="text-[11px] whitespace-pre-wrap break-all mb-2 font-mono" style="color: var(--text); max-height: 80px; overflow: hidden">${escHtml(s.text)}</pre>
+      <div class="flex gap-1.5 justify-end">
+        <button onclick="copySnippet('${s.id}')" class="text-[10px] px-2 py-1 rounded-md font-medium transition-all hover:opacity-80" style="background: var(--accent-light); color: var(--accent); border: 1px solid var(--border-strong)">
+          Copy
+        </button>
+        <button onclick="deleteSnippet('${s.id}')" class="text-[10px] px-2 py-1 rounded-md font-medium transition-all hover:opacity-80" style="background: #fef2f2; color: var(--danger); border: 1px solid #fecaca">
+          Del
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
 
-            count.textContent = apps.length;
-            list.innerHTML = '';
+// ========== PANELS ==========
+let notesOpen = false;
+let adminOpen = false;
 
-            apps.forEach(app => {
-                const c = colorMap[app.color] || colorMap.indigo;
+function toggleNotes() {
+  notesOpen = !notesOpen;
+  adminOpen = false;
+  document.getElementById('notes-sidebar').classList.toggle('open', notesOpen);
+  document.getElementById('admin-panel').classList.remove('open');
+  document.getElementById('overlay').classList.toggle('show', notesOpen || adminOpen);
+  lucide.createIcons();
+}
 
-                list.innerHTML += `
-                    <div class="admin-item flex items-center justify-between p-3 bg-dark-surface/50 border border-dark-border rounded-xl">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div class="p-2 rounded-lg ${c.bg} ${c.text} shrink-0">
-                                <i data-lucide="${app.icon || 'globe'}" class="w-4 h-4"></i>
-                            </div>
-                            <div class="min-w-0">
-                                <span class="text-sm font-medium text-dark-text block truncate">${app.name}</span>
-                                <span class="text-[10px] text-dark-muted/60 truncate block">${app.url.replace(/^https?:\/\//, '')}</span>
-                            </div>
-                        </div>
-                        <div class="flex gap-0.5 shrink-0 ml-2">
-                            <button onclick="editApp('${app.id}')" class="p-2 text-dark-muted hover:text-indigo-400 transition-colors rounded-lg hover:bg-white/5" title="Edit">
-                                <i data-lucide="pencil" class="w-4 h-4"></i>
-                            </button>
-                            <button onclick="deleteApp('${app.id}')" class="p-2 text-dark-muted hover:text-rose-400 transition-colors rounded-lg hover:bg-white/5" title="Delete">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-        }
+function toggleAdminPanel() {
+  adminOpen = !adminOpen;
+  notesOpen = false;
+  document.getElementById('admin-panel').classList.toggle('open', adminOpen);
+  document.getElementById('notes-sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.toggle('show', notesOpen || adminOpen);
+  if (adminOpen) { renderAdminList(); renderSectionsAdmin(); lucide.createIcons(); }
+}
 
-        // ========== SEARCH ==========
-        function filterApps() {
-            renderDashboard();
-        }
+function closeAllPanels() {
+  notesOpen = false; adminOpen = false;
+  document.getElementById('notes-sidebar').classList.remove('open');
+  document.getElementById('admin-panel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
 
-        // ========== ADMIN PANEL ==========
-        function toggleAdminPanel() {
-            const panel = document.getElementById('admin-panel');
-            const overlay = document.getElementById('admin-overlay');
-            const isOpen = !panel.classList.contains('translate-x-full');
+// ========== TOAST ==========
+function showToast(msg, type = 'info') {
+  const icons   = { success: 'check-circle', info: 'info', error: 'alert-circle' };
+  const colors  = { success: '#22c55e', info: '#0ea5e9', error: '#ef4444' };
+  const bgColors= { success: '#f0fdf4', info: '#f0f9ff', error: '#fef2f2' };
+  const borders = { success: 'rgba(34,197,94,0.3)', info: 'rgba(14,165,233,0.3)', error: 'rgba(239,68,68,0.3)' };
 
-            if (isOpen) {
-                panel.classList.add('translate-x-full');
-                overlay.classList.remove('opacity-100');
-                overlay.classList.add('opacity-0');
-                setTimeout(() => overlay.classList.add('hidden'), 300);
-                cancelEdit();
-            } else {
-                overlay.classList.remove('hidden');
-                requestAnimationFrame(() => {
-                    overlay.classList.remove('opacity-0');
-                    overlay.classList.add('opacity-100');
-                });
-                panel.classList.remove('translate-x-full');
-            }
-        }
+  const t = document.createElement('div');
+  t.className = 'toast-in flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-sm font-medium';
+  t.style.cssText = `background:${bgColors[type]}; border: 1px solid ${borders[type]}; color: #1e293b; min-width: 200px;`;
+  t.innerHTML = `<i data-lucide="${icons[type]}" style="width:16px;height:16px;color:${colors[type]};flex-shrink:0"></i>${escHtml(msg)}`;
+  document.getElementById('toast-container').appendChild(t);
+  lucide.createIcons();
+  setTimeout(() => {
+    t.classList.remove('toast-in'); t.classList.add('toast-out');
+    setTimeout(() => t.remove(), 300);
+  }, 2800);
+}
 
-        // ========== COLOR SELECTOR ==========
-        function selectColor(color) {
-            document.getElementById('app-color').value = color;
-            document.querySelectorAll('.color-btn').forEach(btn => {
-                const isSelected = btn.dataset.color === color;
-                btn.classList.toggle('ring-2', isSelected);
-                btn.classList.toggle('ring-indigo-500/50', isSelected);
-                btn.classList.toggle('bg-white/5', isSelected);
-            });
-        }
-
-        // ========== CRUD ==========
-        function saveApp(e) {
-            e.preventDefault();
-            const id = document.getElementById('app-id').value;
-            const name = document.getElementById('app-name').value.trim();
-            const url = document.getElementById('app-url').value.trim();
-            const icon = document.getElementById('app-icon').value.trim();
-            const color = document.getElementById('app-color').value;
-
-            if (!name || !url || !icon) return;
-
-            // Ensure URL has protocol
-            let finalUrl = url;
-            if (!/^https?:\/\//i.test(finalUrl)) {
-                finalUrl = 'https://' + finalUrl;
-            }
-
-            if (id) {
-                apps = apps.map(app => app.id === id ? { id, name, url: finalUrl, icon, color } : app);
-                showToast('App updated successfully', 'success');
-            } else {
-                apps.push({ id: Date.now().toString(), name, url: finalUrl, icon, color });
-                showToast('App added successfully', 'success');
-            }
-
-            localStorage.setItem('dashboard_apps', JSON.stringify(apps));
-            renderDashboard();
-            cancelEdit();
-        }
-
-        function editApp(id) {
-            const app = apps.find(a => a.id === id);
-            if (!app) return;
-
-            document.getElementById('app-id').value = app.id;
-            document.getElementById('app-name').value = app.name;
-            document.getElementById('app-url').value = app.url;
-            document.getElementById('app-icon').value = app.icon;
-            selectColor(app.color);
-
-            document.getElementById('form-title').textContent = 'Edit App';
-            document.getElementById('cancel-btn').classList.remove('hidden');
-        }
-
-        function cancelEdit() {
-            document.getElementById('app-form').reset();
-            document.getElementById('app-id').value = '';
-            document.getElementById('form-title').textContent = 'Add New App';
-            document.getElementById('cancel-btn').classList.add('hidden');
-            selectColor('indigo');
-        }
-
-        function deleteApp(id) {
-            const app = apps.find(a => a.id === id);
-            if (!app) return;
-
-            if (confirm(`Remove "${app.name}" from your workspace?`)) {
-                apps = apps.filter(a => a.id !== id);
-                localStorage.setItem('dashboard_apps', JSON.stringify(apps));
-                renderDashboard();
-                showToast('App removed', 'info');
-            }
-        }
-
-        // ========== TOAST ==========
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const icons = { success: 'check-circle', info: 'info', error: 'alert-circle' };
-            const colors = { success: 'text-emerald-400', info: 'text-indigo-400', error: 'text-rose-400' };
-            const borders = { success: 'border-emerald-500/20', info: 'border-indigo-500/20', error: 'border-rose-500/20' };
-
-            const toast = document.createElement('div');
-            toast.className = `toast glass px-4 py-3 rounded-xl border ${borders[type]} flex items-center gap-3 shadow-lg`;
-            toast.innerHTML = `
-                <i data-lucide="${icons[type]}" class="w-5 h-5 ${colors[type]} shrink-0"></i>
-                <span class="text-sm font-medium text-dark-text">${message}</span>
-            `;
-
-            container.appendChild(toast);
-            lucide.createIcons();
-
-            setTimeout(() => {
-                toast.classList.remove('toast');
-                toast.classList.add('toast-out');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        // ========== CLOCK ==========
-        function updateClock() {
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('en-US', { 
-                weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' 
-            });
-            const timeStr = now.toLocaleTimeString('en-US', { 
-                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true 
-            });
-            document.getElementById('live-clock').textContent = `${dateStr} │ ${timeStr}`;
-        }
-    </script>
+// ========== UTILS ==========
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s) { return String(s).replace(/'/g,"\\'"); }
+</script>
 </body>
 </html>
