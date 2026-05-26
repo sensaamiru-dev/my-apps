@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Launchpad</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        dark: {
+                            bg: '#0a0a0f',
+                            surface: '#12121a',
+                            surface2: '#1a1a2e',
+                            border: 'rgba(255,255,255,0.06)',
+                            text: '#e2e8f0',
+                            muted: '#64748b',
+                        },
+                        light: {
+                            bg: '#f8fafc',
+                            surface: '#ffffff',
+                            surface2: '#f1f5f9',
+                            border: 'rgba(0,0,0,0.08)',
+                            text: '#0f172a',
+                            muted: '#64748b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * { scrollbar-width: thin; scrollbar-color: rgba(99,102,241,0.3) transparent; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 3px; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.5s ease, color 0.3s ease;
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .light .glass {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+        }
+
+        .app-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .app-card:hover {
+            transform: translateY(-6px) scale(1.02);
+        }
+
+        .app-card:active {
+            transform: translateY(-2px) scale(0.98);
+        }
+
+        .icon-ring {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .app-card:hover .icon-ring {
+            transform: scale(1.15) rotate(3deg);
+        }
+
+        .slide-panel {
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stagger-1 { animation-delay: 0.05s; }
+        .stagger-2 { animation-delay: 0.1s; }
+        .stagger-3 { animation-delay: 0.15s; }
+        .stagger-4 { animation-delay: 0.2s; }
+        .stagger-5 { animation-delay: 0.25s; }
+        .stagger-6 { animation-delay: 0.3s; }
+        .stagger-7 { animation-delay: 0.35s; }
+        .stagger-8 { animation-delay: 0.4s; }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .light .gradient-text {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .search-glow:focus {
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), 0 4px 20px rgba(99, 102, 241, 0.1);
+        }
+
+        .light .search-glow:focus {
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2), 0 4px 20px rgba(99, 102, 241, 0.08);
+        }
+
+        .btn-shine {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-shine::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+
+        .btn-shine:hover::after {
+            transform: translateX(100%);
+        }
+
+        .login-bg {
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(168,85,247,0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(236,72,153,0.08) 0%, transparent 50%);
+        }
+
+        .light .login-bg {
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(168,85,247,0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(236,72,153,0.04) 0%, transparent 50%);
+        }
+
+        .toast {
+            animation: toastSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes toastSlide {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast-out {
+            animation: toastOut 0.3s ease-in forwards;
+        }
+
+        @keyframes toastOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        .admin-item {
+            transition: all 0.2s ease;
+        }
+
+        .admin-item:hover {
+            transform: translateX(4px);
+        }
+
+        input, select {
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle {
+            transition: transform 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(15deg) scale(1.1);
+        }
+    </style>
+<base target="_blank">
+</head>
+<body class="bg-dark-bg text-dark-text min-h-screen antialiased">
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-[200] space-y-2"></div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="fixed inset-0 z-[100] flex items-center justify-center login-bg">
+        <div class="glass p-8 rounded-3xl max-w-sm w-full mx-4 text-center shadow-2xl fade-in">
+            <div class="w-16 h-16 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-indigo-400">
+                <i data-lucide="shield-check" class="w-8 h-8"></i>
+            </div>
+            <h2 class="text-2xl font-bold mb-2">Private Workspace</h2>
+            <p class="text-sm text-dark-muted mb-8">Enter your access password to continue</p>
+            <form onsubmit="checkPassword(event)" class="space-y-4">
+                <div class="relative">
+                    <input type="password" id="password-input" placeholder="••••••••" 
+                           class="w-full bg-dark-surface2 border border-dark-border rounded-xl px-4 py-3.5 text-center text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/50 transition-all text-dark-text placeholder:text-dark-muted/50"
+                           autocomplete="off">
+                </div>
+                <p id="login-error" class="text-xs text-rose-400 hidden font-medium">Incorrect password. Access denied.</p>
+                <button type="submit" class="w-full bg-gradient-to-r from-indigo-500 to-purple-500 font-semibold py-3.5 rounded-xl text-sm shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:scale-[1.02] transition-all btn-shine">
+                    Unlock Dashboard
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard-content" class="hidden min-h-screen flex flex-col">
+
+        <!-- Header -->
+        <header class="w-full max-w-6xl mx-auto px-6 pt-8 pb-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-extrabold gradient-text tracking-tight">Launchpad</h1>
+                <p id="live-clock" class="text-xs text-dark-muted mt-1.5 tracking-wider uppercase font-medium"></p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="toggleTheme()" class="theme-toggle glass p-2.5 rounded-xl text-dark-muted hover:text-indigo-400 transition-colors" title="Toggle Theme">
+                    <i data-lucide="sun" id="theme-icon" class="w-5 h-5"></i>
+                </button>
+                <button onclick="toggleAdminPanel()" class="glass px-4 py-2.5 rounded-xl text-sm font-semibold text-indigo-400 hover:text-white flex items-center gap-2 transition-all duration-300 hover:border-indigo-500/30 hover:bg-indigo-500/10">
+                    <i data-lucide="settings-2" class="w-4 h-4"></i> Manage
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="w-full max-w-6xl mx-auto px-6 py-10 flex-grow">
+            <!-- Search -->
+            <div class="max-w-lg mx-auto mb-14 relative">
+                <i data-lucide="search" class="absolute left-4 top-3.5 text-dark-muted/60 w-5 h-5"></i>
+                <input type="text" id="search-input" oninput="filterApps()" placeholder="Search your apps..." 
+                       class="w-full glass pl-12 pr-4 py-3.5 rounded-2xl text-sm focus:outline-none search-glow transition-all text-dark-text placeholder:text-dark-muted/50"
+                       autocomplete="off">
+                <div id="search-count" class="absolute right-4 top-3.5 text-xs text-dark-muted/50 font-medium hidden"></div>
+            </div>
+
+            <!-- Apps Grid -->
+            <div id="apps-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5"></div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden text-center py-20">
+                <div class="w-20 h-20 bg-dark-surface2 rounded-2xl flex items-center justify-center mx-auto mb-4 text-dark-muted/40">
+                    <i data-lucide="search-x" class="w-10 h-10"></i>
+                </div>
+                <p class="text-lg font-semibold text-dark-text mb-1">No apps found</p>
+                <p class="text-sm text-dark-muted">Try a different search term</p>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="w-full text-center py-6 text-xs text-dark-muted/40">
+            Personal Hub &bull; Built with care
+        </footer>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="admin-overlay" onclick="toggleAdminPanel()" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300"></div>
+
+    <div id="admin-panel" class="fixed inset-y-0 right-0 w-full max-w-md glass border-l border-dark-border p-6 shadow-2xl slide-panel transform translate-x-full z-50 overflow-y-auto">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-xl font-bold flex items-center gap-2 text-indigo-400">
+                <i data-lucide="sliders-horizontal" class="w-5 h-5"></i> Manage Workspace
+            </h2>
+            <button onclick="toggleAdminPanel()" class="text-dark-muted hover:text-white p-1 rounded-lg hover:bg-white/5 transition-all">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- App Form -->
+        <form id="app-form" onsubmit="saveApp(event)" class="space-y-5 mb-10 bg-dark-surface2/50 p-5 rounded-2xl border border-dark-border">
+            <div class="flex items-center gap-2 mb-1">
+                <div class="w-1 h-5 bg-indigo-500 rounded-full"></div>
+                <h3 id="form-title" class="text-sm font-bold text-dark-text">Add New App</h3>
+            </div>
+
+            <input type="hidden" id="app-id">
+
+            <div>
+                <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-1.5">App Name</label>
+                <input type="text" id="app-name" required placeholder="e.g. GitHub" 
+                       class="w-full bg-dark-surface border border-dark-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 text-dark-text placeholder:text-dark-muted/40">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-1.5">URL</label>
+                <input type="url" id="app-url" required placeholder="https://..." 
+                       class="w-full bg-dark-surface border border-dark-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 text-dark-text placeholder:text-dark-muted/40">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-1.5">Lucide Icon</label>
+                <div class="flex gap-2">
+                    <input type="text" id="app-icon" required placeholder="e.g. github, mail, calendar..." 
+                           class="w-full bg-dark-surface border border-dark-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 text-dark-text placeholder:text-dark-muted/40">
+                    <a href="https://lucide.dev/icons" target="_blank" 
+                       class="glass px-3 flex items-center justify-center rounded-xl text-xs text-indigo-400 hover:text-white hover:bg-indigo-500/10 transition-all shrink-0" title="Browse Icons">
+                        <i data-lucide="external-link" class="w-4 h-4"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-dark-muted uppercase tracking-wider mb-1.5">Color Theme</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button type="button" onclick="selectColor('indigo')" class="color-btn p-2.5 rounded-xl border border-white/5 text-xs font-medium text-center transition-all hover:scale-105" data-color="indigo">
+                        <div class="w-4 h-4 rounded-full bg-indigo-500 mx-auto mb-1"></div>Indigo
+                    </button>
+                    <button type="button" onclick="selectColor('emerald')" class="color-btn p-2.5 rounded-xl border border-white/5 text-xs font-medium text-center transition-all hover:scale-105" data-color="emerald">
+                        <div class="w-4 h-4 rounded-full bg-emerald-500 mx-auto mb-1"></div>Emerald
+                    </button>
+                    <button type="button" onclick="selectColor('sky')" class="color-btn p-2.5 rounded-xl border border-white/5 text-xs font-medium text-center transition-all hover:scale-105" data-color="sky">
+                        <div class="w-4 h-4 rounded-full bg-sky-500 mx-auto mb-1"></div>Sky
+                    </button>
+                    <button type="button" onclick="selectColor('amber')" class="color-btn p-2.5 rounded-xl border border-white/5 text-xs font-medium text-center transition-all hover:scale-105" data-color="amber">
+                        <div class="w-4 h-4 rounded-full bg-amber-500 mx-auto mb-1"></div>Amber
+                    </button>
+                    <button type="button" onclick="selectColor('rose')" class="color-btn p-2.5 rounded-xl border border-white/5 text-xs font-medium text-center transition-all hover:scale-105" data-color="rose">
+                        <div class="w-4 h-4 rounded-full bg-rose-500 mx-auto mb-1"></div>Rose
+                    </button>
+                    <button type="button" onclick="selectColor('purple')" class="color-btn p-2.5 rounded-xl border border-white/5 text-xs font-medium text-center transition-all hover:scale-105" data-color="purple">
+                        <div class="w-4 h-4 rounded-full bg-purple-500 mx-auto mb-1"></div>Purple
+                    </button>
+                </div>
+                <input type="hidden" id="app-color" value="indigo">
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button type="button" onclick="cancelEdit()" id="cancel-btn" class="hidden flex-1 bg-dark-surface2 border border-dark-border hover:border-white/10 font-medium py-2.5 rounded-xl text-sm transition-all text-dark-muted hover:text-dark-text">
+                    Cancel
+                </button>
+                <button type="submit" class="flex-1 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 font-semibold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-indigo-500/20 btn-shine">
+                    Save App
+                </button>
+            </div>
+        </form>
+
+        <!-- App List -->
+        <div class="mb-4">
+            <h3 class="text-xs font-bold text-dark-muted uppercase tracking-wider mb-3 flex items-center gap-2">
+                <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> Your Apps <span id="app-count" class="bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full text-[10px]"></span>
+            </h3>
+        </div>
+        <div id="admin-apps-list" class="space-y-2"></div>
+    </div>
+
+    <script>
+        // ========== CONFIG ==========
+        const PASSWORD_HASH = "ff34b971e4ff1a9e0132f289826bcedd57c67b0fe1409d4365e3b1b1d0bc8d31";
+
+        // ========== STATE ==========
+        let apps = [];
+        let currentTheme = 'dark';
+
+        const defaultApps = [
+            { id: '1', name: 'GitHub', url: 'https://github.com', icon: 'github', color: 'indigo' },
+            { id: '2', name: 'Google Sheets', url: 'https://sheets.google.com', icon: 'table-2', color: 'emerald' },
+            { id: '3', name: 'Gmail', url: 'https://mail.google.com', icon: 'mail', color: 'rose' },
+            { id: '4', name: 'Calendar', url: 'https://calendar.google.com', icon: 'calendar', color: 'amber' },
+            { id: '5', name: 'Drive', url: 'https://drive.google.com', icon: 'hard-drive', color: 'sky' },
+            { id: '6', name: 'YouTube', url: 'https://youtube.com', icon: 'play-circle', color: 'rose' }
+        ];
+
+        const colorMap = {
+            indigo:   { text: 'text-indigo-400',   bg: 'bg-indigo-500/10',   border: 'border-indigo-500/20',   ring: 'ring-indigo-500/20',   hover: 'hover:bg-indigo-500/20' },
+            emerald:  { text: 'text-emerald-400',  bg: 'bg-emerald-500/10',  border: 'border-emerald-500/20',  ring: 'ring-emerald-500/20',  hover: 'hover:bg-emerald-500/20' },
+            sky:      { text: 'text-sky-400',      bg: 'bg-sky-500/10',      border: 'border-sky-500/20',      ring: 'ring-sky-500/20',      hover: 'hover:bg-sky-500/20' },
+            amber:    { text: 'text-amber-400',    bg: 'bg-amber-500/10',    border: 'border-amber-500/20',    ring: 'ring-amber-500/20',    hover: 'hover:bg-amber-500/20' },
+            rose:     { text: 'text-rose-400',     bg: 'bg-rose-500/10',    border: 'border-rose-500/20',    ring: 'ring-rose-500/20',    hover: 'hover:bg-rose-500/20' },
+            purple:   { text: 'text-purple-400',   bg: 'bg-purple-500/10',  border: 'border-purple-500/20',  ring: 'ring-purple-500/20',  hover: 'hover:bg-purple-500/20' }
+        };
+
+        // ========== INIT ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            initApps();
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            if (sessionStorage.getItem('dashboard_authenticated') === 'true') {
+                unlockDashboard();
+            }
+        });
+
+        function initTheme() {
+            const saved = localStorage.getItem('dashboard_theme');
+            if (saved) {
+                currentTheme = saved;
+            } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+                currentTheme = 'light';
+            }
+            applyTheme();
+        }
+
+        function initApps() {
+            const stored = localStorage.getItem('dashboard_apps');
+            apps = stored ? JSON.parse(stored) : [...defaultApps];
+        }
+
+        // ========== THEME ==========
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('dashboard_theme', currentTheme);
+            applyTheme();
+        }
+
+        function applyTheme() {
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+
+            if (currentTheme === 'light') {
+                body.classList.remove('bg-dark-bg', 'text-dark-text');
+                body.classList.add('bg-light-bg', 'text-light-text', 'light');
+                icon.setAttribute('data-lucide', 'moon');
+            } else {
+                body.classList.remove('bg-light-bg', 'text-light-text', 'light');
+                body.classList.add('bg-dark-bg', 'text-dark-text');
+                icon.setAttribute('data-lucide', 'sun');
+            }
+
+            lucide.createIcons();
+        }
+
+        // ========== AUTH ==========
+        async function sha256(string) {
+            const utf8 = new TextEncoder().encode(string);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', utf8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function checkPassword(e) {
+            e.preventDefault();
+            const input = document.getElementById('password-input').value;
+            const errorMsg = document.getElementById('login-error');
+
+            const inputHash = await sha256(input);
+
+            if (inputHash === PASSWORD_HASH) {
+                sessionStorage.setItem('dashboard_authenticated', 'true');
+                unlockDashboard();
+                showToast('Welcome back!', 'success');
+            } else {
+                errorMsg.classList.remove('hidden');
+                document.getElementById('password-input').value = '';
+                document.getElementById('password-input').focus();
+            }
+        }
+
+        function unlockDashboard() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('dashboard-content').classList.remove('hidden');
+            renderDashboard();
+        }
+
+        // ========== RENDER ==========
+        function renderDashboard() {
+            const grid = document.getElementById('apps-grid');
+            const emptyState = document.getElementById('empty-state');
+            const searchCount = document.getElementById('search-count');
+
+            grid.innerHTML = '';
+
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const filtered = apps.filter(app => app.name.toLowerCase().includes(query));
+
+            if (filtered.length === 0 && query) {
+                grid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                searchCount.classList.add('hidden');
+            } else {
+                grid.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+
+                if (query) {
+                    searchCount.textContent = `${filtered.length} result${filtered.length !== 1 ? 's' : ''}`;
+                    searchCount.classList.remove('hidden');
+                } else {
+                    searchCount.classList.add('hidden');
+                }
+
+                filtered.forEach((app, i) => {
+                    const c = colorMap[app.color] || colorMap.indigo;
+                    const stagger = Math.min(i + 1, 8);
+
+                    grid.innerHTML += `
+                        <a href="${app.url}" target="_blank" 
+                           class="app-card glass p-6 rounded-2xl flex flex-col items-center justify-center text-center group fade-in stagger-${stagger}">
+                            <div class="icon-ring w-14 h-14 rounded-2xl flex items-center justify-center mb-4 border shadow-inner ${c.bg} ${c.border} ${c.text}">
+                                <i data-lucide="${app.icon || 'globe'}" class="w-7 h-7"></i>
+                            </div>
+                            <span class="text-sm font-semibold text-dark-text/80 group-hover:text-dark-text transition-colors">${app.name}</span>
+                            <span class="text-[10px] text-dark-muted/50 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Open →</span>
+                        </a>
+                    `;
+                });
+            }
+
+            renderAdminList();
+            lucide.createIcons();
+        }
+
+        function renderAdminList() {
+            const list = document.getElementById('admin-apps-list');
+            const count = document.getElementById('app-count');
+
+            count.textContent = apps.length;
+            list.innerHTML = '';
+
+            apps.forEach(app => {
+                const c = colorMap[app.color] || colorMap.indigo;
+
+                list.innerHTML += `
+                    <div class="admin-item flex items-center justify-between p-3 bg-dark-surface/50 border border-dark-border rounded-xl">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="p-2 rounded-lg ${c.bg} ${c.text} shrink-0">
+                                <i data-lucide="${app.icon || 'globe'}" class="w-4 h-4"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <span class="text-sm font-medium text-dark-text block truncate">${app.name}</span>
+                                <span class="text-[10px] text-dark-muted/60 truncate block">${app.url.replace(/^https?:\/\//, '')}</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-0.5 shrink-0 ml-2">
+                            <button onclick="editApp('${app.id}')" class="p-2 text-dark-muted hover:text-indigo-400 transition-colors rounded-lg hover:bg-white/5" title="Edit">
+                                <i data-lucide="pencil" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="deleteApp('${app.id}')" class="p-2 text-dark-muted hover:text-rose-400 transition-colors rounded-lg hover:bg-white/5" title="Delete">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // ========== SEARCH ==========
+        function filterApps() {
+            renderDashboard();
+        }
+
+        // ========== ADMIN PANEL ==========
+        function toggleAdminPanel() {
+            const panel = document.getElementById('admin-panel');
+            const overlay = document.getElementById('admin-overlay');
+            const isOpen = !panel.classList.contains('translate-x-full');
+
+            if (isOpen) {
+                panel.classList.add('translate-x-full');
+                overlay.classList.remove('opacity-100');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+                cancelEdit();
+            } else {
+                overlay.classList.remove('hidden');
+                requestAnimationFrame(() => {
+                    overlay.classList.remove('opacity-0');
+                    overlay.classList.add('opacity-100');
+                });
+                panel.classList.remove('translate-x-full');
+            }
+        }
+
+        // ========== COLOR SELECTOR ==========
+        function selectColor(color) {
+            document.getElementById('app-color').value = color;
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                const isSelected = btn.dataset.color === color;
+                btn.classList.toggle('ring-2', isSelected);
+                btn.classList.toggle('ring-indigo-500/50', isSelected);
+                btn.classList.toggle('bg-white/5', isSelected);
+            });
+        }
+
+        // ========== CRUD ==========
+        function saveApp(e) {
+            e.preventDefault();
+            const id = document.getElementById('app-id').value;
+            const name = document.getElementById('app-name').value.trim();
+            const url = document.getElementById('app-url').value.trim();
+            const icon = document.getElementById('app-icon').value.trim();
+            const color = document.getElementById('app-color').value;
+
+            if (!name || !url || !icon) return;
+
+            // Ensure URL has protocol
+            let finalUrl = url;
+            if (!/^https?:\/\//i.test(finalUrl)) {
+                finalUrl = 'https://' + finalUrl;
+            }
+
+            if (id) {
+                apps = apps.map(app => app.id === id ? { id, name, url: finalUrl, icon, color } : app);
+                showToast('App updated successfully', 'success');
+            } else {
+                apps.push({ id: Date.now().toString(), name, url: finalUrl, icon, color });
+                showToast('App added successfully', 'success');
+            }
+
+            localStorage.setItem('dashboard_apps', JSON.stringify(apps));
+            renderDashboard();
+            cancelEdit();
+        }
+
+        function editApp(id) {
+            const app = apps.find(a => a.id === id);
+            if (!app) return;
+
+            document.getElementById('app-id').value = app.id;
+            document.getElementById('app-name').value = app.name;
+            document.getElementById('app-url').value = app.url;
+            document.getElementById('app-icon').value = app.icon;
+            selectColor(app.color);
+
+            document.getElementById('form-title').textContent = 'Edit App';
+            document.getElementById('cancel-btn').classList.remove('hidden');
+        }
+
+        function cancelEdit() {
+            document.getElementById('app-form').reset();
+            document.getElementById('app-id').value = '';
+            document.getElementById('form-title').textContent = 'Add New App';
+            document.getElementById('cancel-btn').classList.add('hidden');
+            selectColor('indigo');
+        }
+
+        function deleteApp(id) {
+            const app = apps.find(a => a.id === id);
+            if (!app) return;
+
+            if (confirm(`Remove "${app.name}" from your workspace?`)) {
+                apps = apps.filter(a => a.id !== id);
+                localStorage.setItem('dashboard_apps', JSON.stringify(apps));
+                renderDashboard();
+                showToast('App removed', 'info');
+            }
+        }
+
+        // ========== TOAST ==========
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const icons = { success: 'check-circle', info: 'info', error: 'alert-circle' };
+            const colors = { success: 'text-emerald-400', info: 'text-indigo-400', error: 'text-rose-400' };
+            const borders = { success: 'border-emerald-500/20', info: 'border-indigo-500/20', error: 'border-rose-500/20' };
+
+            const toast = document.createElement('div');
+            toast.className = `toast glass px-4 py-3 rounded-xl border ${borders[type]} flex items-center gap-3 shadow-lg`;
+            toast.innerHTML = `
+                <i data-lucide="${icons[type]}" class="w-5 h-5 ${colors[type]} shrink-0"></i>
+                <span class="text-sm font-medium text-dark-text">${message}</span>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.remove('toast');
+                toast.classList.add('toast-out');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ========== CLOCK ==========
+        function updateClock() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-US', { 
+                weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' 
+            });
+            const timeStr = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true 
+            });
+            document.getElementById('live-clock').textContent = `${dateStr} │ ${timeStr}`;
+        }
+    </script>
+</body>
+</html>
