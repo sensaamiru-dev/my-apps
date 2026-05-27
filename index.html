@@ -92,19 +92,30 @@ tailwind.config = {
   .app-card:hover .icon-wrap { transform: scale(1.12) rotate(3deg); }
 
   #notes-sidebar {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
     width: 290px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
     transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
     transform: translateX(100%);
-    background: #ffffff; /* SOLID white, no blur */
+    background: #ffffff;
     border-left: 1px solid var(--border);
     box-shadow: -8px 0 40px rgba(0,0,0,0.12);
+    overflow: hidden;
   }
   #notes-sidebar.open { transform: translateX(0); }
 
   #admin-panel {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: 360px;
+    z-index: 50;
+    overflow-y: auto;
     transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
     transform: translateX(100%);
-    background: #ffffff; /* SOLID white, no blur */
+    background: #ffffff;
     border-left: 1px solid var(--border);
     box-shadow: -8px 0 40px rgba(0,0,0,0.12);
   }
@@ -170,12 +181,10 @@ tailwind.config = {
   .badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
 
   .color-btn { transition: all 0.2s; }
-  .color-btn.selected { ring: 2px; outline: 2px solid var(--accent); outline-offset: 2px; }
+  .color-btn.selected { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   .snippet-card { transition: all 0.2s; }
   .snippet-card:hover { border-color: var(--accent); }
-
-  #note-editor { font-family: 'DM Mono', monospace; font-size: 12.5px; }
 
   .visits-badge {
     position: absolute;
@@ -221,7 +230,7 @@ tailwind.config = {
   .overlay {
     position: fixed; inset: 0;
     background: rgba(5,46,22,0.15);
-    backdrop-filter: blur(2px); /* lighter blur */
+    backdrop-filter: blur(2px);
     z-index: 40;
     opacity: 0;
     transition: opacity 0.3s;
@@ -258,7 +267,6 @@ tailwind.config = {
   }
   #password-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
 
-  /* Sync status indicator */
   .sync-dot {
     width: 6px; height: 6px; border-radius: 50%;
     display: inline-block; margin-right: 4px;
@@ -267,19 +275,6 @@ tailwind.config = {
   .sync-dot.offline { background: #ef4444; }
   .sync-dot.syncing { background: #f59e0b; animation: pulse 1s infinite; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-/* FIX: Solid backgrounds for sidebars to prevent blur stacking */
-#notes-sidebar, #admin-panel {
-  background: #ffffff !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-/* FIX: Lighter overlay blur */
-.overlay {
-  backdrop-filter: blur(2px) !important;
-  -webkit-backdrop-filter: blur(2px) !important;
-  background: rgba(5,46,22,0.12) !important;
-}
 </style>
 <base target="_blank">
 </head>
@@ -304,130 +299,42 @@ tailwind.config = {
   </div>
 </div>
 
-<!-- ===== DASHBOARD ===== -->
-<div id="dashboard-content" class="hidden min-h-screen flex" style="position: relative; z-index: 1;">
-
-  <!-- MAIN -->
-  <div class="flex-1 flex flex-col min-w-0">
-
-    <!-- HEADER -->
-    <header class="sticky top-0 z-30 glass" style="border-bottom: 1px solid var(--border);">
-      <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
-          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: var(--accent); box-shadow: 0 2px 10px rgba(22,163,74,0.4);">
-            <i data-lucide="zap" class="w-4 h-4 text-white"></i>
-          </div>
-          <div>
-            <h1 class="text-xl font-bold grad-text tracking-tight leading-none">Launchpad</h1>
-            <p id="live-clock" class="text-[10px] font-mono mt-0.5" style="color: var(--muted)"></p>
-          </div>
-        </div>
-
-        <!-- Search -->
-        <div class="flex-1 max-w-xs relative hidden sm:block">
-          <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4" style="color: var(--muted)"></i>
-          <input type="text" id="search-input" oninput="filterApps()" placeholder="Search apps…"
-            class="inp pl-9 py-2 text-sm" style="border-radius: 999px; padding-top: 7px; padding-bottom: 7px;">
-        </div>
-
-        <div class="flex items-center gap-2">
-          <!-- Sync Status -->
-          <div id="sync-status" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold" style="background: var(--surface2); border: 1px solid var(--border); color: var(--muted)">
-            <span class="sync-dot offline" id="sync-dot"></span>
-            <span id="sync-text">Offline</span>
-          </div>
-          <button onclick="syncNow()" title="Sync Now" class="p-2.5 rounded-xl transition-all hover:scale-105" style="background: var(--surface2); border: 1px solid var(--border); color: var(--accent)">
-            <i data-lucide="refresh-cw" class="w-4 h-4" id="sync-icon"></i>
-          </button>
-          <button onclick="toggleNotes()" id="notes-btn" title="Notes & Clips"
-            class="p-2.5 rounded-xl transition-all hover:scale-105" style="background: var(--surface2); border: 1px solid var(--border); color: var(--accent)">
-            <i data-lucide="notebook-pen" class="w-4 h-4"></i>
-          </button>
-          <button onclick="toggleAdminPanel()" title="Manage"
-            class="p-2.5 rounded-xl transition-all hover:scale-105 flex items-center gap-1.5 text-xs font-semibold px-3" style="background: var(--accent-light); border: 1px solid var(--border-strong); color: var(--accent)">
-            <i data-lucide="settings-2" class="w-4 h-4"></i>
-            <span class="hidden sm:inline">Manage</span>
-          </button>
-          <button onclick="logout()" title="Logout"
-            class="p-2.5 rounded-xl transition-all hover:scale-105" style="background: #fef2f2; border: 1px solid #fecaca; color: #ef4444">
-            <i data-lucide="log-out" class="w-4 h-4"></i>
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <!-- CONTENT -->
-    <main class="max-w-6xl mx-auto w-full px-6 py-8 flex-1">
-
-      <!-- Mobile Search -->
-      <div class="sm:hidden mb-6 relative">
-        <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4" style="color: var(--muted)"></i>
-        <input type="text" id="search-input-mobile" oninput="filterApps(true)" placeholder="Search apps…"
-          class="inp pl-9 py-2 text-sm" style="border-radius: 999px;">
-      </div>
-
-      <!-- RECENTLY USED -->
-      <div id="recent-strip-wrap" class="mb-8 hidden">
-        <div class="flex items-center gap-2 mb-3">
-          <i data-lucide="clock" class="w-3.5 h-3.5" style="color: var(--accent)"></i>
-          <span class="text-xs font-bold uppercase tracking-wider" style="color: var(--muted)">Recently Used</span>
-        </div>
-        <div id="recent-strip" class="flex gap-2 flex-wrap"></div>
-      </div>
-
-      <!-- SECTIONS -->
-      <div id="apps-container"></div>
-
-      <!-- Empty State -->
-      <div id="empty-state" class="hidden text-center py-20">
-        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background: var(--surface3); color: var(--muted)">
-          <i data-lucide="search-x" class="w-8 h-8"></i>
-        </div>
-        <p class="font-semibold mb-1">No apps found</p>
-        <p class="text-sm" style="color: var(--muted)">Try a different search term</p>
-      </div>
-    </main>
-
-    <footer class="text-center py-5 text-xs" style="color: var(--muted); border-top: 1px solid var(--border)">
-      Personal Hub &bull; Cloud Sync Enabled
-    </footer>
-  </div>
-
-  <!-- NOTES SIDEBAR -->
-    <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border)">
-      <span class="font-bold text-sm flex items-center gap-2" style="color: var(--text-2)">
-        <i data-lucide="notebook-pen" class="w-4 h-4" style="color: var(--accent)"></i> Notes & Clips
-      </span>
-      <button onclick="toggleNotes()" style="color: var(--muted)" class="hover:opacity-70 transition-opacity">
-        <i data-lucide="x" class="w-4 h-4"></i>
-      </button>
-    </div>
-
-    <!-- Quick Note -->
-    <div class="px-4 pt-4 pb-3" style="border-bottom: 1px solid var(--border)">
-      <p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color: var(--muted)">Quick Note</p>
-      <textarea id="note-editor" class="inp w-full" style="min-height: 90px; font-family: 'DM Mono', monospace; font-size: 12px;" placeholder="Type a note…" oninput="autoSaveNote()"></textarea>
-      <div class="flex gap-2 mt-2">
-        <button onclick="saveNoteAsSnippet()" class="btn-primary py-1.5 text-xs flex-1">Save as Snippet</button>
-        <button onclick="clearNote()" class="btn-secondary py-1.5 text-xs">Clear</button>
-      </div>
-    </div>
-
-    <!-- Snippets -->
-    <div class="flex-1 overflow-y-auto px-4 py-3">
-      <div class="flex items-center justify-between mb-2">
-        <p class="text-[10px] font-bold uppercase tracking-wider" style="color: var(--muted)">Saved Snippets</p>
-        <span id="snippet-count" class="badge" style="background: var(--accent-light); color: var(--accent)">0</span>
-      </div>
-      <div id="snippets-list" class="flex flex-col gap-2"></div>
-    </div>
-  </aside>
-</div>
-
 <!-- ===== OVERLAY ===== -->
 <div id="overlay" class="overlay" onclick="closeAllPanels()"></div>
 
+<!-- ===== NOTES SIDEBAR ===== -->
+<aside id="notes-sidebar">
+  <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border); flex-shrink: 0;">
+    <span class="font-bold text-sm flex items-center gap-2" style="color: var(--text-2)">
+      <i data-lucide="notebook-pen" class="w-4 h-4" style="color: var(--accent)"></i> Notes & Clips
+    </span>
+    <button onclick="toggleNotes()" style="color: var(--muted)" class="hover:opacity-70 transition-opacity">
+      <i data-lucide="x" class="w-4 h-4"></i>
+    </button>
+  </div>
+
+  <!-- Quick Note -->
+  <div class="px-4 pt-4 pb-3" style="border-bottom: 1px solid var(--border); flex-shrink: 0;">
+    <p class="text-[10px] font-bold uppercase tracking-wider mb-2" style="color: var(--muted)">Quick Note</p>
+    <textarea id="note-editor" class="inp w-full" style="min-height: 90px; font-family: 'DM Mono', monospace; font-size: 12px;" placeholder="Type a note…" oninput="autoSaveNote()"></textarea>
+    <div class="flex gap-2 mt-2">
+      <button onclick="saveNoteAsSnippet()" class="btn-primary py-1.5 text-xs flex-1">Save as Snippet</button>
+      <button onclick="clearNote()" class="btn-secondary py-1.5 text-xs">Clear</button>
+    </div>
+  </div>
+
+  <!-- Snippets -->
+  <div class="flex-1 overflow-y-auto px-4 py-3">
+    <div class="flex items-center justify-between mb-2">
+      <p class="text-[10px] font-bold uppercase tracking-wider" style="color: var(--muted)">Saved Snippets</p>
+      <span id="snippet-count" class="badge" style="background: var(--accent-light); color: var(--accent)">0</span>
+    </div>
+    <div id="snippets-list" class="flex flex-col gap-2"></div>
+  </div>
+</aside>
+
 <!-- ===== ADMIN PANEL ===== -->
+<div id="admin-panel">
   <div class="flex items-center justify-between px-6 py-5" style="border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 1;">
     <h2 class="font-bold flex items-center gap-2 text-sm" style="color: var(--text-2)">
       <i data-lucide="sliders-horizontal" class="w-4 h-4" style="color: var(--accent)"></i> Manage Workspace
@@ -531,11 +438,96 @@ tailwind.config = {
   </div>
 </div>
 
+<!-- ===== DASHBOARD ===== -->
+<div id="dashboard-content" class="hidden min-h-screen flex flex-col" style="position: relative; z-index: 1;">
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-30 glass" style="border-bottom: 1px solid var(--border);">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: var(--accent); box-shadow: 0 2px 10px rgba(22,163,74,0.4);">
+          <i data-lucide="zap" class="w-4 h-4 text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold grad-text tracking-tight leading-none">Launchpad</h1>
+          <p id="live-clock" class="text-[10px] font-mono mt-0.5" style="color: var(--muted)"></p>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="flex-1 max-w-xs relative hidden sm:block">
+        <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4" style="color: var(--muted)"></i>
+        <input type="text" id="search-input" oninput="filterApps()" placeholder="Search apps…"
+          class="inp pl-9 py-2 text-sm" style="border-radius: 999px; padding-top: 7px; padding-bottom: 7px;">
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- Sync Status -->
+        <div id="sync-status" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold" style="background: var(--surface2); border: 1px solid var(--border); color: var(--muted)">
+          <span class="sync-dot offline" id="sync-dot"></span>
+          <span id="sync-text">Offline</span>
+        </div>
+        <button onclick="syncNow()" title="Sync Now" class="p-2.5 rounded-xl transition-all hover:scale-105" style="background: var(--surface2); border: 1px solid var(--border); color: var(--accent)">
+          <i data-lucide="refresh-cw" class="w-4 h-4" id="sync-icon"></i>
+        </button>
+        <button onclick="toggleNotes()" id="notes-btn" title="Notes & Clips"
+          class="p-2.5 rounded-xl transition-all hover:scale-105" style="background: var(--surface2); border: 1px solid var(--border); color: var(--accent)">
+          <i data-lucide="notebook-pen" class="w-4 h-4"></i>
+        </button>
+        <button onclick="toggleAdminPanel()" title="Manage"
+          class="p-2.5 rounded-xl transition-all hover:scale-105 flex items-center gap-1.5 text-xs font-semibold px-3" style="background: var(--accent-light); border: 1px solid var(--border-strong); color: var(--accent)">
+          <i data-lucide="settings-2" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Manage</span>
+        </button>
+        <button onclick="logout()" title="Logout"
+          class="p-2.5 rounded-xl transition-all hover:scale-105" style="background: #fef2f2; border: 1px solid #fecaca; color: #ef4444">
+          <i data-lucide="log-out" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <main class="max-w-6xl mx-auto w-full px-6 py-8 flex-1">
+
+    <!-- Mobile Search -->
+    <div class="sm:hidden mb-6 relative">
+      <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4" style="color: var(--muted)"></i>
+      <input type="text" id="search-input-mobile" oninput="filterApps(true)" placeholder="Search apps…"
+        class="inp pl-9 py-2 text-sm" style="border-radius: 999px;">
+    </div>
+
+    <!-- RECENTLY USED -->
+    <div id="recent-strip-wrap" class="mb-8 hidden">
+      <div class="flex items-center gap-2 mb-3">
+        <i data-lucide="clock" class="w-3.5 h-3.5" style="color: var(--accent)"></i>
+        <span class="text-xs font-bold uppercase tracking-wider" style="color: var(--muted)">Recently Used</span>
+      </div>
+      <div id="recent-strip" class="flex gap-2 flex-wrap"></div>
+    </div>
+
+    <!-- SECTIONS -->
+    <div id="apps-container"></div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="hidden text-center py-20">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background: var(--surface3); color: var(--muted)">
+        <i data-lucide="search-x" class="w-8 h-8"></i>
+      </div>
+      <p class="font-semibold mb-1">No apps found</p>
+      <p class="text-sm" style="color: var(--muted)">Try a different search term</p>
+    </div>
+  </main>
+
+  <footer class="text-center py-5 text-xs" style="color: var(--muted); border-top: 1px solid var(--border)">
+    Personal Hub &bull; Cloud Sync Enabled
+  </footer>
+</div>
+
 <script>
 // ========== CONFIG ==========
 const PASSWORD_HASH = "ff34b971e4ff1a9e0132f289826bcedd57c67b0fe1409d4365e3b1b1d0bc8d31";
 
-// 🔴 REPLACE THIS WITH YOUR SUPABASE ANON KEY
 const SUPABASE_URL = 'https://lkpxnsekribpugfsuiba.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrcHhuc2VrcmlicHVnZnN1aWJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4MDk0OTUsImV4cCI6MjA5NTM4NTQ5NX0.BJmc8_oWOXo9nlAK30kv2si0M5PhXuYwqrhzYl46hJk';
 
@@ -580,16 +572,12 @@ async function sbFetch(table, method = 'GET', body = null) {
       'apikey': SUPABASE_KEY,
       'Authorization': `Bearer ${SUPABASE_KEY}`,
       'Content-Type': 'application/json',
-      'Prefer': method === 'POST' ? 'return=representation' : 'return=representation'
+      'Prefer': 'return=representation'
     }
   };
   if (body) opts.body = JSON.stringify(body);
-  
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, opts);
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(err);
-  }
+  if (!res.ok) { const err = await res.text(); throw new Error(err); }
   return res.status === 204 ? null : await res.json();
 }
 
@@ -601,13 +589,10 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(updateClock, 1000);
   if (sessionStorage.getItem('lp_auth') === 'true') unlockDashboard();
   lucide.createIcons();
-  
-  // Auto-sync every 30 seconds if online
   setInterval(() => { if (isOnline && !isSyncing) syncNow(); }, 30000);
 });
 
 function initData() {
-  // Try to load from localStorage first (for offline), then sync from cloud
   apps     = JSON.parse(localStorage.getItem('lp_apps')     || 'null') || [...defaultApps];
   sections = JSON.parse(localStorage.getItem('lp_sections') || 'null') || [...defaultSections];
   visits   = JSON.parse(localStorage.getItem('lp_visits')   || '{}');
@@ -617,8 +602,6 @@ function initData() {
     const el = document.getElementById('note-editor');
     if (el) el.value = savedNote;
   }, 100);
-  
-  // Try initial sync from cloud
   if (SUPABASE_KEY !== 'YOUR_SUPABASE_ANON_KEY_HERE') {
     syncNow();
   } else {
@@ -635,57 +618,28 @@ function saveLocal() {
 
 // ========== SYNC ==========
 async function syncNow() {
-  if (SUPABASE_KEY === 'YOUR_SUPABASE_ANON_KEY_HERE') {
-    showToast('Please set your Supabase API key first', 'error');
-    return;
-  }
-  
+  if (SUPABASE_KEY === 'YOUR_SUPABASE_ANON_KEY_HERE') { showToast('Please set your Supabase API key first', 'error'); return; }
   isSyncing = true;
   updateSyncStatus('syncing', 'Syncing...');
-  
   try {
-    // Pull from cloud
     const [cloudApps, cloudSections, cloudSnippets] = await Promise.all([
       sbFetch('apps?select=*'),
       sbFetch('sections?select=*&order=sort_order'),
       sbFetch('snippets?select=*&order=created_at.desc')
     ]);
-    
-    // Convert cloud data to local format
-    const cloudAppsMap = {};
-    cloudApps.forEach(a => {
-      cloudAppsMap[a.id] = a;
-      visits[a.id] = { count: a.visit_count || 0, last: a.last_visit || 0 };
-    });
-    
-    // Merge: cloud wins for apps/sections/snippets
     if (cloudApps.length > 0) {
-      apps = cloudApps.map(a => ({
-        id: a.id, name: a.name, url: a.url, icon: a.icon, 
-        color: a.color, section: a.section || ''
-      }));
-    } else if (apps.length > 0) {
-      // Push local apps to cloud if cloud is empty
-      await pushAppsToCloud();
-    }
-    
-    if (cloudSections.length > 0) {
-      sections = cloudSections.map(s => s.name);
-    } else if (sections.length > 0) {
-      await pushSectionsToCloud();
-    }
-    
-    if (cloudSnippets.length > 0) {
-      snippets = cloudSnippets.map(s => ({ id: s.id, text: s.text, created: new Date(s.created_at).getTime() }));
-    }
-    
+      cloudApps.forEach(a => { visits[a.id] = { count: a.visit_count || 0, last: a.last_visit || 0 }; });
+      apps = cloudApps.map(a => ({ id: a.id, name: a.name, url: a.url, icon: a.icon, color: a.color, section: a.section || '' }));
+    } else if (apps.length > 0) { await pushAppsToCloud(); }
+    if (cloudSections.length > 0) { sections = cloudSections.map(s => s.name); }
+    else if (sections.length > 0) { await pushSectionsToCloud(); }
+    if (cloudSnippets.length > 0) { snippets = cloudSnippets.map(s => ({ id: s.id, text: s.text, created: new Date(s.created_at).getTime() })); }
     saveLocal();
     renderAll();
     isOnline = true;
     updateSyncStatus('online', 'Synced');
     document.getElementById('last-sync').textContent = 'Last sync: ' + new Date().toLocaleTimeString();
     showToast('Synced with cloud', 'success');
-    
   } catch (err) {
     console.error('Sync error:', err);
     isOnline = false;
@@ -699,23 +653,8 @@ async function syncNow() {
 async function pushAppsToCloud() {
   for (const app of apps) {
     const v = visits[app.id] || { count: 0, last: 0 };
-    await sbFetch('apps', 'POST', {
-      id: app.id,
-      name: app.name,
-      url: app.url,
-      icon: app.icon,
-      color: app.color,
-      section: app.section || '',
-      visit_count: v.count,
-      last_visit: v.last
-    }).catch(() => {
-      // If exists, try upsert
-      return sbFetch(`apps?id=eq.${app.id}`, 'PATCH', {
-        name: app.name, url: app.url, icon: app.icon,
-        color: app.color, section: app.section || '',
-        visit_count: v.count, last_visit: v.last
-      });
-    });
+    await sbFetch('apps', 'POST', { id: app.id, name: app.name, url: app.url, icon: app.icon, color: app.color, section: app.section || '', visit_count: v.count, last_visit: v.last })
+      .catch(() => sbFetch(`apps?id=eq.${app.id}`, 'PATCH', { name: app.name, url: app.url, icon: app.icon, color: app.color, section: app.section || '', visit_count: v.count, last_visit: v.last }));
   }
 }
 
@@ -738,15 +677,12 @@ async function forcePush() {
   isSyncing = true;
   updateSyncStatus('syncing', 'Pushing...');
   try {
-    // Clear cloud first (delete all)
     await sbFetch('apps?id=not.is.null', 'DELETE');
     await sbFetch('sections?id=not.is.null', 'DELETE');
     await sbFetch('snippets?id=not.is.null', 'DELETE');
-    
     await pushAppsToCloud();
     await pushSectionsToCloud();
     await pushSnippetsToCloud();
-    
     saveLocal();
     renderAll();
     updateSyncStatus('online', 'Pushed');
@@ -754,9 +690,7 @@ async function forcePush() {
   } catch (err) {
     updateSyncStatus('offline', 'Push failed');
     showToast('Push failed', 'error');
-  } finally {
-    isSyncing = false;
-  }
+  } finally { isSyncing = false; }
 }
 
 async function forcePull() {
@@ -768,15 +702,10 @@ function updateSyncStatus(status, text) {
   const dot = document.getElementById('sync-dot');
   const txt = document.getElementById('sync-text');
   const icon = document.getElementById('sync-icon');
-  
   dot.className = `sync-dot ${status}`;
   txt.textContent = text;
-  
-  if (status === 'syncing') {
-    icon.classList.add('animate-spin');
-  } else {
-    icon.classList.remove('animate-spin');
-  }
+  if (status === 'syncing') { icon.classList.add('animate-spin'); }
+  else { icon.classList.remove('animate-spin'); }
 }
 
 // ========== AUTH ==========
@@ -834,22 +763,18 @@ function renderAll() {
   populateSectionSelect();
   renderSnippets();
   lucide.createIcons();
-  fixBrokenIcons();
 }
 
 function renderRecent() {
   const strip = document.getElementById('recent-strip');
   const wrap  = document.getElementById('recent-strip-wrap');
   strip.innerHTML = '';
-
   const sorted = Object.entries(visits)
     .filter(([id]) => apps.find(a => a.id === id))
     .sort((a, b) => b[1].last - a[1].last)
     .slice(0, 6);
-
   if (sorted.length === 0) { wrap.classList.add('hidden'); return; }
   wrap.classList.remove('hidden');
-
   sorted.forEach(([id]) => {
     const app = apps.find(a => a.id === id);
     if (!app) return;
@@ -873,10 +798,8 @@ function renderApps(query = '') {
   const container = document.getElementById('apps-container');
   const emptyState = document.getElementById('empty-state');
   container.innerHTML = '';
-
   const q = query.toLowerCase();
   const filtered = q ? apps.filter(a => a.name.toLowerCase().includes(q) || (a.section||'').toLowerCase().includes(q)) : apps;
-
   if (filtered.length === 0 && q) {
     container.classList.add('hidden');
     emptyState.classList.remove('hidden');
@@ -884,7 +807,6 @@ function renderApps(query = '') {
   }
   container.classList.remove('hidden');
   emptyState.classList.add('hidden');
-
   const groups = {};
   const sectionOrder = [...sections, '__none__'];
   filtered.forEach(app => {
@@ -892,17 +814,14 @@ function renderApps(query = '') {
     if (!groups[key]) groups[key] = [];
     groups[key].push(app);
   });
-
   let delay = 0;
   sectionOrder.forEach(sectionKey => {
     const sectionApps = groups[sectionKey];
     if (!sectionApps || sectionApps.length === 0) return;
-
     const label = sectionKey === '__none__' ? 'Other' : sectionKey;
     const sectionEl = document.createElement('div');
     sectionEl.className = 'mb-10';
     sectionEl.dataset.section = sectionKey;
-
     sectionEl.innerHTML = `
       <div class="section-header" style="cursor: pointer;" onclick="toggleSection(this)">
         <span class="text-xs font-bold uppercase tracking-wider" style="color: var(--accent); white-space: nowrap">${escHtml(label)}</span>
@@ -921,7 +840,7 @@ function renderApps(query = '') {
                class="app-card card p-5 rounded-2xl flex flex-col items-center text-center group fade-up d${d} ${vc > 0 ? 'has-visits' : ''}"
                data-app-id="${app.id}">
               ${vc > 0 ? `<span class="visits-badge">${vc}</span>` : ''}
-              <div class="icon-wrap w-13 h-13 w-[52px] h-[52px] rounded-xl flex items-center justify-center mb-3 border"
+              <div class="icon-wrap w-[52px] h-[52px] rounded-xl flex items-center justify-center mb-3 border"
                    style="background:${c.bg}; border-color:${c.border}; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5)">
                 <i data-lucide="${app.icon||'globe'}" class="w-6 h-6" style="color:${c.text}" data-icon-name="${app.icon}" data-app-url="${app.url}"></i>
               </div>
@@ -940,7 +859,6 @@ function toggleSection(headerEl) {
   const parent = headerEl.closest('[data-section]');
   const body = parent.querySelector('.section-body');
   const isCollapsed = parent.classList.contains('collapsed');
-
   if (isCollapsed) {
     parent.classList.remove('collapsed');
     body.style.maxHeight = '1000px';
@@ -968,17 +886,10 @@ async function trackVisit(id) {
   visits[id].count++;
   visits[id].last = Date.now();
   saveLocal();
-  
-  // Sync visit to cloud
   if (isOnline && SUPABASE_KEY !== 'YOUR_SUPABASE_ANON_KEY_HERE') {
-    try {
-      await sbFetch(`apps?id=eq.${id}`, 'PATCH', {
-        visit_count: visits[id].count,
-        last_visit: visits[id].last
-      });
-    } catch(e) { /* silent fail */ }
+    try { await sbFetch(`apps?id=eq.${id}`, 'PATCH', { visit_count: visits[id].count, last_visit: visits[id].last }); }
+    catch(e) {}
   }
-  
   setTimeout(() => { renderRecent(); lucide.createIcons(); }, 300);
 }
 
@@ -1015,13 +926,10 @@ async function addSection() {
   if (!name || sections.includes(name)) { showToast('Section already exists or empty', 'error'); return; }
   sections.push(name);
   saveLocal();
-  
   if (isOnline) {
-    try {
-      await sbFetch('sections', 'POST', { name, sort_order: sections.length - 1 });
-    } catch(e) { /* may already exist */ }
+    try { await sbFetch('sections', 'POST', { name, sort_order: sections.length - 1 }); }
+    catch(e) {}
   }
-  
   inp.value = '';
   renderSectionsAdmin();
   populateSectionSelect();
@@ -1034,24 +942,18 @@ async function deleteSection(name) {
   sections = sections.filter(s => s !== name);
   apps = apps.map(a => a.section === name ? { ...a, section: '' } : a);
   saveLocal();
-  
   if (isOnline) {
     try {
       await sbFetch(`sections?name=eq.${encodeURIComponent(name)}`, 'DELETE');
-      // Update apps in cloud
-      const affected = apps.filter(a => a.section === '');
-      for (const app of affected) {
-        await sbFetch(`apps?id=eq.${app.id}`, 'PATCH', { section: '' });
-      }
     } catch(e) {}
   }
-  
   renderAll();
   showToast('Section deleted', 'info');
 }
 
 function renderSectionsAdmin() {
   const list = document.getElementById('sections-admin-list');
+  if (!list) return;
   list.innerHTML = sections.map(s => `
     <div class="flex items-center justify-between px-3 py-2 rounded-lg" style="background: var(--surface3); border: 1px solid var(--border)">
       <span class="text-xs font-medium" style="color: var(--text-2)">${escHtml(s)}</span>
@@ -1065,6 +967,7 @@ function renderSectionsAdmin() {
 
 function populateSectionSelect() {
   const sel = document.getElementById('app-section');
+  if (!sel) return;
   const cur = sel.value;
   sel.innerHTML = `<option value="">Unsectioned</option>` +
     sections.map(s => `<option value="${escAttr(s)}" ${cur === s ? 'selected' : ''}>${escHtml(s)}</option>`).join('');
@@ -1073,6 +976,7 @@ function populateSectionSelect() {
 // ========== COLOR PICKER ==========
 function buildColorPicker() {
   const wrap = document.getElementById('color-picker');
+  if (!wrap) return;
   wrap.innerHTML = Object.entries(COLORS).map(([key, c]) => `
     <button type="button" onclick="selectColor('${key}')" data-color="${key}"
       class="color-btn w-7 h-7 rounded-full transition-all hover:scale-110"
@@ -1101,35 +1005,18 @@ async function saveApp(e) {
   const icon    = document.getElementById('app-icon').value.trim();
   const color   = document.getElementById('app-color').value;
   const section = document.getElementById('app-section').value;
-
   if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-
   const appData = { id: id || Date.now().toString(), name, url, icon, color, section };
   const v = visits[appData.id] || { count: 0, last: 0 };
-
-  if (id) {
-    apps = apps.map(a => a.id === id ? appData : a);
-    showToast('App updated', 'success');
-  } else {
-    apps.push(appData);
-    showToast('App added', 'success');
-  }
-  
+  if (id) { apps = apps.map(a => a.id === id ? appData : a); showToast('App updated', 'success'); }
+  else { apps.push(appData); showToast('App added', 'success'); }
   saveLocal();
-  
-  // Sync to cloud
   if (isOnline) {
     try {
-      await sbFetch('apps', 'POST', {
-        ...appData,
-        visit_count: v.count,
-        last_visit: v.last
-      }).catch(() => sbFetch(`apps?id=eq.${appData.id}`, 'PATCH', {
-        ...appData, visit_count: v.count, last_visit: v.last
-      }));
+      await sbFetch('apps', 'POST', { ...appData, visit_count: v.count, last_visit: v.last })
+        .catch(() => sbFetch(`apps?id=eq.${appData.id}`, 'PATCH', { ...appData, visit_count: v.count, last_visit: v.last }));
     } catch(e) {}
   }
-  
   renderAll();
   cancelEdit();
 }
@@ -1164,13 +1051,9 @@ async function deleteApp(id) {
   apps = apps.filter(a => a.id !== id);
   delete visits[id];
   saveLocal();
-  
   if (isOnline) {
-    try {
-      await sbFetch(`apps?id=eq.${id}`, 'DELETE');
-    } catch(e) {}
+    try { await sbFetch(`apps?id=eq.${id}`, 'DELETE'); } catch(e) {}
   }
-  
   renderAll();
   showToast('App removed', 'info');
 }
@@ -1178,6 +1061,7 @@ async function deleteApp(id) {
 function renderAdminList() {
   const list = document.getElementById('admin-apps-list');
   const count = document.getElementById('app-count');
+  if (!list || !count) return;
   count.textContent = apps.length;
   list.innerHTML = apps.map(app => {
     const c = COLORS[app.color] || COLORS.green;
@@ -1225,13 +1109,9 @@ async function saveNoteAsSnippet() {
   const snippet = { id: Date.now().toString(), text, created: Date.now() };
   snippets.unshift(snippet);
   saveLocal();
-  
   if (isOnline) {
-    try {
-      await sbFetch('snippets', 'POST', { id: snippet.id, text: snippet.text });
-    } catch(e) {}
+    try { await sbFetch('snippets', 'POST', { id: snippet.id, text: snippet.text }); } catch(e) {}
   }
-  
   clearNote();
   renderSnippets();
   showToast('Snippet saved', 'success');
@@ -1240,13 +1120,9 @@ async function saveNoteAsSnippet() {
 async function deleteSnippet(id) {
   snippets = snippets.filter(s => s.id !== id);
   saveLocal();
-  
   if (isOnline) {
-    try {
-      await sbFetch(`snippets?id=eq.${id}`, 'DELETE');
-    } catch(e) {}
+    try { await sbFetch(`snippets?id=eq.${id}`, 'DELETE'); } catch(e) {}
   }
-  
   renderSnippets();
 }
 
@@ -1259,6 +1135,7 @@ function copySnippet(id) {
 function renderSnippets() {
   const list = document.getElementById('snippets-list');
   const count = document.getElementById('snippet-count');
+  if (!list || !count) return;
   count.textContent = snippets.length;
   if (snippets.length === 0) {
     list.innerHTML = `<p class="text-xs text-center py-4" style="color: var(--muted)">No snippets yet</p>`;
@@ -1268,12 +1145,8 @@ function renderSnippets() {
     <div class="snippet-card rounded-xl p-3" style="background: var(--surface2); border: 1px solid var(--border)">
       <pre class="text-[11px] whitespace-pre-wrap break-all mb-2 font-mono" style="color: var(--text); max-height: 80px; overflow: hidden">${escHtml(s.text)}</pre>
       <div class="flex gap-1.5 justify-end">
-        <button onclick="copySnippet('${s.id}')" class="text-[10px] px-2 py-1 rounded-md font-medium transition-all hover:opacity-80" style="background: var(--accent-light); color: var(--accent); border: 1px solid var(--border-strong)">
-          Copy
-        </button>
-        <button onclick="deleteSnippet('${s.id}')" class="text-[10px] px-2 py-1 rounded-md font-medium transition-all hover:opacity-80" style="background: #fef2f2; color: var(--danger); border: 1px solid #fecaca">
-          Del
-        </button>
+        <button onclick="copySnippet('${s.id}')" class="text-[10px] px-2 py-1 rounded-md font-medium transition-all hover:opacity-80" style="background: var(--accent-light); color: var(--accent); border: 1px solid var(--border-strong)">Copy</button>
+        <button onclick="deleteSnippet('${s.id}')" class="text-[10px] px-2 py-1 rounded-md font-medium transition-all hover:opacity-80" style="background: #fef2f2; color: var(--danger); border: 1px solid #fecaca">Del</button>
       </div>
     </div>
   `).join('');
@@ -1288,7 +1161,7 @@ function toggleNotes() {
   adminOpen = false;
   document.getElementById('notes-sidebar').classList.toggle('open', notesOpen);
   document.getElementById('admin-panel').classList.remove('open');
-  document.getElementById('overlay').classList.toggle('show', notesOpen || adminOpen);
+  document.getElementById('overlay').classList.toggle('show', notesOpen);
   lucide.createIcons();
 }
 
@@ -1297,7 +1170,7 @@ function toggleAdminPanel() {
   notesOpen = false;
   document.getElementById('admin-panel').classList.toggle('open', adminOpen);
   document.getElementById('notes-sidebar').classList.remove('open');
-  document.getElementById('overlay').classList.toggle('show', notesOpen || adminOpen);
+  document.getElementById('overlay').classList.toggle('show', adminOpen);
   if (adminOpen) { renderAdminList(); renderSectionsAdmin(); lucide.createIcons(); }
 }
 
@@ -1310,27 +1183,16 @@ function closeAllPanels() {
 
 // ========== EXPORT / IMPORT ==========
 function exportData() {
-  const data = {
-    apps: apps,
-    sections: sections,
-    visits: visits,
-    snippets: snippets,
-    note: localStorage.getItem('lp_note') || '',
-    exportedAt: new Date().toISOString()
-  };
+  const data = { apps, sections, visits, snippets, note: localStorage.getItem('lp_note') || '', exportedAt: new Date().toISOString() };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = `launchpad-backup-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+  a.href = url; a.download = `launchpad-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url);
   showToast('Backup downloaded', 'success');
 }
 
-function importData() {
-  document.getElementById('import-file').click();
-}
+function importData() { document.getElementById('import-file').click(); }
 
 function handleImport(e) {
   const file = e.target.files[0];
@@ -1340,26 +1202,14 @@ function handleImport(e) {
     try {
       const data = JSON.parse(event.target.result);
       if (data.apps) {
-        apps = data.apps;
-        sections = data.sections || [];
-        visits = data.visits || {};
-        snippets = data.snippets || [];
+        apps = data.apps; sections = data.sections || []; visits = data.visits || {}; snippets = data.snippets || [];
         if (data.note) localStorage.setItem('lp_note', data.note);
         saveLocal();
-        
-        // Push imported data to cloud
-        if (isOnline) {
-          await forcePush();
-        }
-        
+        if (isOnline) await forcePush();
         renderAll();
         showToast('Backup restored!', 'success');
-      } else {
-        showToast('Invalid backup file', 'error');
-      }
-    } catch (err) {
-      showToast('Failed to parse file', 'error');
-    }
+      } else { showToast('Invalid backup file', 'error'); }
+    } catch (err) { showToast('Failed to parse file', 'error'); }
   };
   reader.readAsText(file);
   e.target.value = '';
@@ -1371,7 +1221,6 @@ function showToast(msg, type = 'info') {
   const colors  = { success: '#22c55e', info: '#0ea5e9', error: '#ef4444' };
   const bgColors= { success: '#f0fdf4', info: '#f0f9ff', error: '#fef2f2' };
   const borders = { success: 'rgba(34,197,94,0.3)', info: 'rgba(14,165,233,0.3)', error: 'rgba(239,68,68,0.3)' };
-
   const t = document.createElement('div');
   t.className = 'toast-in flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-sm font-medium';
   t.style.cssText = `background:${bgColors[type]}; border: 1px solid ${borders[type]}; color: #1e293b; min-width: 200px;`;
