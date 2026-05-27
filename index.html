@@ -60,9 +60,9 @@ tailwind.config = {
   }
 
   .glass {
-    background: rgba(255,255,255,0.75);
-    backdrop-filter: blur(16px);
-    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
   }
 
   .card {
@@ -92,15 +92,21 @@ tailwind.config = {
   .app-card:hover .icon-wrap { transform: scale(1.12) rotate(3deg); }
 
   #notes-sidebar {
-    width: 280px;
+    width: 290px;
     transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
     transform: translateX(100%);
+    background: #ffffff; /* SOLID white, no blur */
+    border-left: 1px solid var(--border);
+    box-shadow: -8px 0 40px rgba(0,0,0,0.12);
   }
   #notes-sidebar.open { transform: translateX(0); }
 
   #admin-panel {
     transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
     transform: translateX(100%);
+    background: #ffffff; /* SOLID white, no blur */
+    border-left: 1px solid var(--border);
+    box-shadow: -8px 0 40px rgba(0,0,0,0.12);
   }
   #admin-panel.open { transform: translateX(0); }
 
@@ -214,8 +220,8 @@ tailwind.config = {
 
   .overlay {
     position: fixed; inset: 0;
-    background: rgba(5,46,22,0.25);
-    backdrop-filter: blur(4px);
+    background: rgba(5,46,22,0.15);
+    backdrop-filter: blur(2px); /* lighter blur */
     z-index: 40;
     opacity: 0;
     transition: opacity 0.3s;
@@ -261,6 +267,19 @@ tailwind.config = {
   .sync-dot.offline { background: #ef4444; }
   .sync-dot.syncing { background: #f59e0b; animation: pulse 1s infinite; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+/* FIX: Solid backgrounds for sidebars to prevent blur stacking */
+#notes-sidebar, #admin-panel {
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* FIX: Lighter overlay blur */
+.overlay {
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
+  background: rgba(5,46,22,0.12) !important;
+}
 </style>
 <base target="_blank">
 </head>
@@ -375,7 +394,6 @@ tailwind.config = {
   </div>
 
   <!-- NOTES SIDEBAR -->
-  <aside id="notes-sidebar" class="fixed right-0 top-0 bottom-0 z-50 flex flex-col shadow-2xl" style="width: 290px; background: var(--surface); border-left: 1px solid var(--border);">
     <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid var(--border)">
       <span class="font-bold text-sm flex items-center gap-2" style="color: var(--text-2)">
         <i data-lucide="notebook-pen" class="w-4 h-4" style="color: var(--accent)"></i> Notes & Clips
@@ -410,7 +428,6 @@ tailwind.config = {
 <div id="overlay" class="overlay" onclick="closeAllPanels()"></div>
 
 <!-- ===== ADMIN PANEL ===== -->
-<div id="admin-panel" class="fixed inset-y-0 right-0 z-50 overflow-y-auto" style="width: 380px; background: var(--surface); border-left: 1px solid var(--border); box-shadow: -4px 0 40px rgba(0,0,0,0.08);">
   <div class="flex items-center justify-between px-6 py-5" style="border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 1;">
     <h2 class="font-bold flex items-center gap-2 text-sm" style="color: var(--text-2)">
       <i data-lucide="sliders-horizontal" class="w-4 h-4" style="color: var(--accent)"></i> Manage Workspace
